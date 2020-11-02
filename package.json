@@ -10,7 +10,8 @@
     "postinstall": "run-s install:*",
     "install:server": "cd server && yarn",
     "install:vti": "cd vti && yarn",
-    "build:grammar": "tsc -p . && node dist/scripts/build_grammar",
+    "build:stage-grammar": "tsc -p . && node dist/scripts/build_stage_grammar",
+    "build:grammar": "tsc -p . && node dist/scripts/build_grammar",    
     "compile": "run-s compile:source copy:snippets",
     "compile:source": "tsc -b .",
     "watch": "run-s compile copy:snippets watch:build",
@@ -91,6 +92,26 @@
     ],
     "languages": [
       {
+        "id": "stage",
+        "aliases": [
+          "Stage",
+          "stage"
+        ],
+        "extensions": [
+          ".stage"
+        ],
+        "configuration": "./languages/stage-language-configuration.json"
+      },
+      {
+        "id": "stage-html",
+        "aliases": [
+          "Stage-html"
+        ],
+        "configuration": "./languages/stage-html-language-configuration.json"
+      },
+
+
+      {
         "id": "vue",
         "aliases": [
           "Vue",
@@ -119,6 +140,45 @@
       }
     ],
     "grammars": [
+      {
+        "language": "stage",
+        "scopeName": "source.stage",
+        "path": "./syntaxes/stage/stage-generated.json",
+        "embeddedLanguages": {
+          "text.html.basic": "html",
+          "text.html.stage-html": "stage-html",
+          "text.jade.slm": "slm",
+          "text.pug": "jade",
+          "text.haml": "haml",
+          "text.slim": "slim",
+          "text.html.liquid": "liquid",
+          "source.css": "css",
+          "source.css.scss": "scss",
+          "source.css.less": "less",
+          "source.css.postcss": "vue-postcss",
+          "source.sass": "sass",
+          "source.stylus": "stylus",
+          "source.js": "javascript",
+          "source.ts": "typescript",
+          "source.coffee": "coffeescript",
+          "text.html.markdown": "md",
+          "source.yaml": "yaml",
+          "source.json": "json",
+          "source.php": "php",
+          "source.graphql": "graphql"
+        }
+      },
+      {
+        "language": "stage-html",
+        "scopeName": "text.html.stage-html",
+        "path": "./syntaxes/stage/stage-html.tmLanguage.json",
+        "embeddedLanguages": {
+          "source.js": "javascript"
+        }
+      },
+
+
+
       {
         "language": "vue",
         "scopeName": "source.vue",
