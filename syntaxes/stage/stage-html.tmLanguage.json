@@ -5,7 +5,7 @@
   "uuid": "ca2e4260-5d62-45bf-8cf1-d8b5cc19c8f8",
   "patterns": [
     {
-      "include": "source.stage#vue-interpolations"
+      "include": "#stage-embedded-code"
     },
     {
       "name": "meta.tag.any.html",
@@ -145,6 +145,99 @@
         {
           "name": "invalid.illegal.bad-comments-or-CDATA.html",
           "match": "(\\s*)(?!--|>)\\S(\\s*)"
+        }
+      ]
+    },
+    {
+      "begin": "(<)(style)(?![^/>]*/>\\s*$)",
+      "beginCaptures": {
+        "1": {
+          "name": "punctuation.definition.tag.begin.html"
+        },
+        "2": {
+          "name": "entity.name.tag.style.html"
+        }
+      },
+      "end": "(</)(style)(>)",
+      "endCaptures": {
+        "1": {
+          "name": "punctuation.definition.tag.begin.html"
+        },
+        "2": {
+          "name": "entity.name.tag.style.html"
+        },
+        "3": {
+          "name": "punctuation.definition.tag.end.html"
+        }
+      },
+      "patterns": [
+        {
+          "include": "#tag-stuff"
+        },
+        {
+          "contentName": "source.css",
+          "begin": "(>)",
+          "beginCaptures": {
+            "1": {
+              "name": "punctuation.definition.tag.end.html"
+            }
+          },
+          "end": "(?=</style>)",
+          "patterns": [
+            {
+              "include": "#stage-embedded-code"
+            },
+            {
+              "include": "source.css"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "source.js.embedded.html",
+      "begin": "(<)(script)(?![^/>]*/>\\s*$)",
+      "beginCaptures": {
+        "1": {
+          "name": "punctuation.definition.tag.begin.html"
+        },
+        "2": {
+          "name": "entity.name.tag.script.html"
+        }
+      },
+      "end": "(</)(script)(>)",
+      "endCaptures": {
+        "1": {
+          "name": "punctuation.definition.tag.begin.html"
+        },
+        "2": {
+          "name": "entity.name.tag.script.html"
+        },
+        "3": {
+          "name": "punctuation.definition.tag.end.html"
+        }
+      },
+      "patterns": [
+        {
+          "include": "#tag-stuff"
+        },
+        {
+          "contentName": "source.js",
+          "begin": "(>)",
+          "beginCaptures": {
+            "1": {
+              "name": "punctuation.definition.tag.end.html"
+            }
+          },
+          "end": "(?=</script>)",
+          "patterns": [
+            {
+              "include": "#stage-embedded-code"
+            },
+            {
+              "include": "source.js"
+            }
+          ]
         }
       ]
     },
@@ -294,104 +387,28 @@
       "match": "<>"
     },
     {
-      "name": "stage.embedded.block",
-      "begin": "(<%\\s)",
-      "beginCaptures": {
-        "0": {
-          "name": "storage.type.function.js"
-        }
-      },
-      "end": "(%>)",
-      "endCaptures": {
-        "0": {
-          "name": "storage.type.function.js"
-        }
-      },
-      "patterns": [
-        {
-          "include": "source.js"
-        }
-      ]
-    },
-    {
-      "name": "stage.embedded.output",
-      "begin": "(<%\\+)",
-      "beginCaptures": {
-        "0": {
-          "name": "storage.type.function.js"
-        }
-      },
-      "end": "(%>)",
-      "endCaptures": {
-        "0": {
-          "name": "storage.type.function.js"
-        }
-      },
-      "patterns": [
-        {
-          "include": "source.js"
-        }
-      ]
-    },
-    {
-      "name": "stage.embedded.output-safe",
-      "begin": "(<%\\=)",
-      "beginCaptures": {
-        "0": {
-          "name": "storage.type.function.js"
-        }
-      },
-      "end": "(%>)",
-      "endCaptures": {
-        "0": {
-          "name": "storage.type.function.js"
-        }
-      },
-      "patterns": [
-        {
-          "include": "source.js"
-        }
-      ]
-    },
-    {
-      "name": "stage.embedded.localisation",
-      "begin": "(<%@)",
-      "beginCaptures": {
-        "0": {
-          "name": "stage.tags.open"
-        }
-      },
-      "end": "(%>)",
-      "endCaptures": {
-        "0": {
-          "name": "stage.tags.close"
-        }
-      },
-      "patterns": [
-        {
-          "include": "source.js"
-        }
-      ]
+      "name": "invalid.illegal.bad-angle-bracket.html",
+      "match": "<"
     }
   ],
   "repository": {
     "stage-embedded-code": {
-      "name": "stage.code",
-      "begin": "<%[=+]?",
+      "name": "source.stage.code",
+      "begin": "(<%[=+]?)",
       "beginCaptures": {
         "0": {
-          "name": "support.other.stage"
+          "name": "entity.name.function.js source.stage.embedded.open"
         }
       },
-      "end": "\\%>",
+      "end": "(%>)",
       "endCaptures": {
         "0": {
-          "name": "support.other.stage"
+          "name": "entity.name.function.js source.stage.embedded.close"
         }
       },
       "patterns": [
         {
-          "include": "#stage.code"
+          "include": "source.stage.code"
         },
         {
           "include": "source.js"
@@ -434,7 +451,7 @@
       },
       "patterns": [
         {
-          "include": "source.vue#vue-interpolations"
+          "include": "#stage-embedded-code"
         },
         {
           "include": "#entities"
@@ -457,7 +474,7 @@
       },
       "patterns": [
         {
-          "include": "source.vue#vue-interpolations"
+          "include": "#stage-embedded-code"
         },
         {
           "include": "#entities"
@@ -498,7 +515,7 @@
           },
           "patterns": [
             {
-              "include": "source.vue#vue-interpolations"
+              "include": "#stage-embedded-code"
             },
             {
               "include": "#entities"
@@ -522,7 +539,7 @@
           },
           "patterns": [
             {
-              "include": "source.vue#vue-interpolations"
+              "include": "#stage-embedded-code"
             },
             {
               "include": "#entities"
@@ -543,7 +560,7 @@
     "tag-stuff": {
       "patterns": [
         {
-          "incluce": "#stage-embedded-code"
+          "include": "#stage-embedded-code"
         },
         {
           "include": "#vue-directives"
@@ -562,6 +579,9 @@
         },
         {
           "include": "#unquoted-attribute"
+        },
+        {
+          "incluce": "#stage-embedded-code"
         }
       ]
     },

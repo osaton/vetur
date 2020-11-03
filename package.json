@@ -109,6 +109,13 @@
         ],
         "configuration": "./languages/stage-html-language-configuration.json"
       },
+      {
+        "id": "stage-code",
+        "aliases": [
+          "Stage-code"
+        ],
+        "configuration": "./languages/stage-language-configuration.json"
+      },
 
 
       {
@@ -159,6 +166,7 @@
           "source.sass": "sass",
           "source.stylus": "stylus",
           "source.js": "javascript",
+          "source.stage.code": "stage-code",
           "source.ts": "typescript",
           "source.coffee": "coffeescript",
           "text.html.markdown": "md",
@@ -172,6 +180,15 @@
         "language": "stage-html",
         "scopeName": "text.html.stage-html",
         "path": "./syntaxes/stage/stage-html.tmLanguage.json",
+        "embeddedLanguages": {
+          "source.js": "javascript",
+          "source.css": "css"
+        }
+      },
+      {
+        "language": "stage-code",
+        "scopeName": "source.stage.code",
+        "path": "./syntaxes/stage/stage-code.tmLanguage.json",
         "embeddedLanguages": {
           "source.js": "javascript"
         }

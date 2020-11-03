@@ -20,3 +20,4 @@ docs/.vuepress/dist
 coverage.lcov
 
 **/*.tsbuildinfo
+yarn-error.log
