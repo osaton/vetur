@@ -234,7 +234,7 @@ repository:
       '0': { name: entity.name.function.js source.stage.embedded.close }
     patterns:
       - include: source.stage.code
-      - include: source.js
+      #- include: source.js
 
   entities:
     patterns:

@@ -4,14 +4,29 @@ scopeName: source.stage.code
 fileTypes: [stage-function]
 uuid: 02a29c40-101f-4762-975d-9551f0319f01
 patterns:
-  - match: test
-    name: variable.other.test
-  - match: 'test'
-    name: variable.other.test2
-  - match: (['"]cm-scriptlet:\/\/([a-zA-Z0-9_-]+)(\/[^'"]+)?\/?['"])
-    name: variable.other.stage url.stage.scriptlet
+  - match: cm-scriptlet:\/\/([a-zA-Z0-9_-]+)(\/[^'"]+)?\/?
+    name: entity.name.tag
   - match: (['"]cm-[a-z-]*:\/\/([a-zA-Z0-9_-]+)(\/[^'"]+)?\/?['"])
-    name: variable.other.stage url.stage
+    name: entity.name.tag
   - match: (['"]studio-(file|folder):\/\/([a-zA-Z0-9_-]+)(\/[^'"]+)?\/?['"])
-    name: variable.other.stage url.stage.studio
+    name: entity.name.tag
+  # - match: (['"]cm-scriptlet:\/\/([a-zA-Z0-9_-]+)(\/[^'"]+)?\/?['"])
+  #   name: variable.other.stage url.stage.scriptlet
+  # - match: (['"]cm-[a-z-]*:\/\/([a-zA-Z0-9_-]+)(\/[^'"]+)?\/?['"])
+  #   name: variable.other.stage url.stage
+  # - match: (['"]studio-(file|folder):\/\/([a-zA-Z0-9_-]+)(\/[^'"]+)?\/?['"])
+  #   name: variable.other.stage url.stage.studio
   - include: source.js
+repository:
+  string-single-quoted:
+    name: string.quoted.single.js
+    begin: "'"
+    beginCaptures:
+      '0': { name: punctuation.definition.string.begin.js }
+    end: "'"
+    endCaptures:
+      '0': { name: punctuation.definition.string.end.js }
+    patterns:
+      #- include: source.vue#vue-interpolations
+      - include: source.stage.code
+      - include: source.js

@@ -409,9 +409,6 @@
       "patterns": [
         {
           "include": "source.stage.code"
-        },
-        {
-          "include": "source.js"
         }
       ]
     },
