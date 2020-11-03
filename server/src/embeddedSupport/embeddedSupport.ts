@@ -1,5 +1,6 @@
 import { TextDocument, Position, Range } from 'vscode-languageserver-types';
-import { parseVueDocumentRegions, EmbeddedRegion } from './vueDocumentRegionParser';
+//import { parseVueDocumentRegions, EmbeddedRegion } from './vueDocumentRegionParser';
+import { parseStageDocumentRegions, EmbeddedRegion } from './stageDocumentRegionParser';
 
 export type LanguageId =
   | 'vue'
@@ -60,7 +61,8 @@ const defaultLanguageIdForBlockTypes: { [type: string]: string } = {
 };
 
 export function getVueDocumentRegions(document: TextDocument): VueDocumentRegions {
-  const { regions, importedScripts } = parseVueDocumentRegions(document);
+  //const { regions, importedScripts } = parseVueDocumentRegions(document);
+  const { regions, importedScripts } = parseStageDocumentRegions(document);
 
   return {
     getSingleLanguageDocument: (languageId: LanguageId) => getSingleLanguageDocument(document, regions, languageId),

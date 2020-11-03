@@ -188,10 +188,10 @@ export class VLS {
   }
 
   private async setupDynamicFormatters(settings: VLSFullConfig) {
-    if (settings.vetur.format.enable) {
+   if (settings.vetur.format.enable) {
       if (!this.documentFormatterRegistration) {
         this.documentFormatterRegistration = await this.lspConnection.client.register(DocumentFormattingRequest.type, {
-          documentSelector: ['vue']
+          documentSelector: ['stage']
         });
       }
     } else {
@@ -311,8 +311,9 @@ export class VLS {
       /**
        * Only use space as trigger character in `vue-html` mode
        */
+      const modeId = mode.getId();
       if (
-        mode.getId() !== 'vue-html' &&
+        modeId !== 'vue-html' &&
         context &&
         context?.triggerKind === CompletionTriggerKind.TriggerCharacter &&
         context.triggerCharacter === ' '
@@ -488,7 +489,8 @@ export class VLS {
 
     const doc = this.documentService.getDocument(textDocument.uri)!;
     const mode = this.languageModes.getModeAtPosition(doc, range.start);
-    if (this.languageModes.getModeAtPosition(doc, range.end) !== mode) {
+    const posMode = this.languageModes.getModeAtPosition(doc, range.end)
+    if (posMode !== mode) {
       return [];
     }
     if (mode && mode.getCodeActions) {
@@ -551,7 +553,7 @@ export class VLS {
 
   async doValidate(doc: TextDocument, cancellationToken?: VCancellationToken) {
     const diagnostics: Diagnostic[] = [];
-    if (doc.languageId === 'vue') {
+    if (doc.languageId === 'stage') {
       for (const lmr of this.languageModes.getAllLanguageModeRangesInDocument(doc)) {
         if (lmr.mode.doValidation) {
           if (this.validation[lmr.mode.getId()]) {
