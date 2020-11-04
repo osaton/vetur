@@ -58,7 +58,7 @@ import { LanguageId } from '../embeddedSupport/embeddedSupport';
 import { APPLY_REFACTOR_COMMAND } from '../modes/script/javascript';
 import { VCancellationToken, VCancellationTokenSource } from '../utils/cancellationToken';
 
-export class VLS {
+export class LS {
   // @Todo: Remove this and DocumentContext
   private workspacePath: string | undefined;
 

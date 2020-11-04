@@ -1,3 +1,3 @@
-import { VLS } from './services/vls';
+import { LS } from './services/ls';
 
-export { VLS };
+export { LS };
