@@ -1,7 +1,10 @@
 import { TextDocument, Position, Range } from 'vscode-languageserver-types';
-import { parseStageDocumentRegions, EmbeddedRegion } from './stageDocumentRegionParser';
+import { parseDocumentRegions, EmbeddedRegion } from './documentRegionParser';
 
 export type LanguageId =
+  | 'stage'
+  | 'stage-html'
+  | 'html'
   | 'vue'
   | 'vue-html'
   | 'pug'
@@ -54,13 +57,13 @@ export interface VueDocumentRegions {
 type RegionType = 'template' | 'script' | 'style' | 'custom';
 
 const defaultLanguageIdForBlockTypes: { [type: string]: string } = {
-  template: 'vue-html',
+  template: 'stage-html',
   script: 'javascript',
   style: 'css'
 };
 
 export function getVueDocumentRegions(document: TextDocument): VueDocumentRegions {
-  const { regions, importedScripts } = parseStageDocumentRegions(document);
+  const { regions, importedScripts } = parseDocumentRegions(document);
 
   return {
     getSingleLanguageDocument: (languageId: LanguageId) => getSingleLanguageDocument(document, regions, languageId),

@@ -15,7 +15,7 @@ export interface EmbeddedRegion {
 const defaultScriptLang = 'javascript';
 const defaultCSSLang = 'css';
 
-export function parseStageDocumentRegions(document: TextDocument) {
+export function parseDocumentRegions(document: TextDocument) {
   const regions: EmbeddedRegion[] = [];
   const text = document.getText();
   const scanner = createScanner(text);

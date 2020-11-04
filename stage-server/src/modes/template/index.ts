@@ -22,6 +22,24 @@ import { VCancellationToken } from '../../utils/cancellationToken';
 
 type DocumentRegionCache = LanguageModelCache<VueDocumentRegions>;
 
+export class StageHTMLMode extends HTMLMode {
+  constructor(
+    tsModule: T_TypeScript,
+    serviceHost: IServiceHost,
+    documentRegions: DocumentRegionCache,
+    workspacePath: string,
+    vueInfoService?: VueInfoService
+  ) {
+    const vueDocuments = getLanguageModelCache<HTMLDocument>(10, 60, document => parseHTMLDocument(document));
+    const vueVersion = inferVueVersion(tsModule, workspacePath);
+    super(documentRegions, workspacePath, vueVersion, vueDocuments, vueInfoService)
+  }
+
+  getId() {
+    return 'stage-html'
+  }
+}
+
 export class VueHTMLMode implements LanguageMode {
   private htmlMode: HTMLMode;
   private vueInterpolationMode: VueInterpolationMode;

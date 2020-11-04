@@ -28,7 +28,7 @@ import { getVueDocumentRegions, VueDocumentRegions, LanguageId, LanguageRange } 
 import { getVueMode } from '../modes/vue';
 import { getCSSMode, getSCSSMode, getLESSMode, getPostCSSMode } from '../modes/style';
 import { getJavascriptMode } from '../modes/script/javascript';
-import { VueHTMLMode } from '../modes/template';
+import { VueHTMLMode, StageHTMLMode } from '../modes/template';
 import { getStylusMode } from '../modes/style/stylus';
 import { DocumentContext, RefactorAction } from '../types';
 import { VueInfoService } from '../services/vueInfoService';
@@ -83,6 +83,9 @@ export interface LanguageModeRange extends LanguageRange {
 
 export class LanguageModes {
   private modes: { [k in LanguageId]: LanguageMode } = {
+    stage: nullMode,
+    'stage-html': nullMode,
+    html: nullMode,
     vue: nullMode,
     pug: nullMode,
     'vue-html': nullMode,
@@ -136,6 +139,14 @@ export class LanguageModes {
       services.infoService
     );
 
+    const stageHtmlMode = new StageHTMLMode(
+      tsModule,
+      this.serviceHost,
+      this.documentRegions,
+      workspacePath,
+      services.infoService
+    );
+
     const jsMode = await getJavascriptMode(
       this.serviceHost,
       this.documentRegions,
@@ -146,6 +157,7 @@ export class LanguageModes {
 
     this.modes['vue'] = getVueMode(workspacePath, globalSnippetDir);
     this.modes['vue-html'] = vueHtmlMode;
+    this.modes['stage-html'] = stageHtmlMode;
     this.modes['pug'] = getPugMode(workspacePath);
     this.modes['css'] = getCSSMode(workspacePath, this.documentRegions);
     this.modes['postcss'] = getPostCSSMode(workspacePath, this.documentRegions);

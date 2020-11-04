@@ -1,33 +1,38 @@
 
 import { TextDocument } from 'vscode-languageserver-types';
 import * as assert from 'assert';
-import { parseStageDocumentRegions } from '../stageDocumentRegionParser';
+import { parseDocumentRegions } from '../documentRegionParser';
 import { getSingleLanguageDocument, getSingleTypeDocument, getLanguageRangesOfType } from '../embeddedSupport';
 
 suite('New Embedded Support', () => {
   const src = `
 <template>
-
+  <div class="test"></div>
+  <script>
+    const scriptBlock = true;
+  </script>
+  <div class="test2"></div>
+  <style>
+    .style-block { color: #f0f; }
+  </style>
+  <div class="test3"></div>
 </template>
-<script>
-export default {
-}
-</script>
-<style>
-</style>
 `;
 
   test('Basic', () => {
-    const { regions } = parseStageDocumentRegions(TextDocument.create('test://test.vue', 'vue', 0, src));
+    const { regions } = parseDocumentRegions(TextDocument.create('test://test.stage', 'stage', 0, src));
 
-    assert.equal(regions[0].languageId, 'stage-html');
-    assert.equal(regions[1].languageId, 'stage-code');
+    console.log(regions);
+    assert.equal(regions[0].languageId, 'html');
+    assert.equal(regions[1].languageId, 'javascript');
+    assert.equal(regions[0].languageId, 'html');
     assert.equal(regions[2].languageId, 'css');
+    assert.equal(regions[0].languageId, 'html');
   });
 
   test('Get Single Language Document', () => {
-    const doc = TextDocument.create('test://test.vue', 'vue', 0, src);
-    const { regions } = parseStageDocumentRegions(doc);
+    const doc = TextDocument.create('test://test.stage', 'stage', 0, src);
+    const { regions } = parseDocumentRegions(doc);
 
     const newDoc = getSingleLanguageDocument(doc, regions, 'javascript');
     const jsSrc = `export default {
@@ -37,8 +42,8 @@ export default {
   });
 
   test('Get Single RegionType Document', () => {
-    const doc = TextDocument.create('test://test.vue', 'vue', 0, src);
-    const { regions } = parseStageDocumentRegions(doc);
+    const doc = TextDocument.create('test://test.stage', 'stage', 0, src);
+    const { regions } = parseDocumentRegions(doc);
 
     const newDoc = getSingleTypeDocument(doc, regions, 'script');
     const jsSrc = `export default {
@@ -48,8 +53,8 @@ export default {
   });
 
   test('Get Ranges of Type', () => {
-    const doc = TextDocument.create('test://test.vue', 'vue', 0, src);
-    const { regions } = parseStageDocumentRegions(doc);
+    const doc = TextDocument.create('test://test.stage', 'stage', 0, src);
+    const { regions } = parseDocumentRegions(doc);
 
     const ranges = getLanguageRangesOfType(doc, regions, 'script');
 
@@ -72,7 +77,7 @@ suite('Double language blocks', () => {
 </style>
 `;
 
-    const { regions } = parseStageDocumentRegions(TextDocument.create('test://test.vue', 'vue', 0, src));
+    const { regions } = parseDocumentRegions(TextDocument.create('test://test.stage', 'stage', 0, src));
 
     assert.equal(regions[0].languageId, 'vue-html');
     assert.equal(regions[1].languageId, 'css');
@@ -92,7 +97,7 @@ suite('Double language blocks', () => {
 </style>
 `;
 
-    const { regions } = parseStageDocumentRegions(TextDocument.create('test://test.vue', 'vue', 0, src));
+    const { regions } = parseDocumentRegions(TextDocument.create('test://test.stage', 'stage', 0, src));
 
     assert.equal(regions[0].languageId, 'vue-html');
     assert.equal(regions[1].languageId, 'scss');
@@ -112,7 +117,7 @@ suite('Double language blocks', () => {
 </style>
 `;
 
-    const { regions } = parseStageDocumentRegions(TextDocument.create('test://test.vue', 'vue', 0, src));
+    const { regions } = parseDocumentRegions(TextDocument.create('test://test.stage', 'stage', 0, src));
 
     assert.equal(regions[0].languageId, 'vue-html');
     assert.equal(regions[1].languageId, 'scss');
@@ -131,7 +136,7 @@ suite('External Source', () => {
 `;
 
   test('Get Script Src', () => {
-    const { importedScripts } = parseStageDocumentRegions(TextDocument.create('test://test.vue', 'vue', 0, src));
+    const { importedScripts } = parseDocumentRegions(TextDocument.create('test://test.stage', 'stage', 0, src));
 
     assert.equal(importedScripts[0], './external.js');
   });
@@ -145,7 +150,7 @@ suite('Template region positions', () => {
 `;
 
   test('vue-html region positions', () => {
-    const { regions } = parseStageDocumentRegions(TextDocument.create('test://test.vue', 'vue', 0, htmlSrc));
+    const { regions } = parseDocumentRegions(TextDocument.create('test://test.stage', 'stage', 0, htmlSrc));
 
     assert.equal(regions[0].languageId, 'vue-html');
     assert.equal(
@@ -166,7 +171,7 @@ p Test
 `;
 
   test('pug region positions', () => {
-    const { regions } = parseStageDocumentRegions(TextDocument.create('test://test.vue', 'vue', 0, pugSrc));
+    const { regions } = parseDocumentRegions(TextDocument.create('test://test.stage', 'stage', 0, pugSrc));
 
     assert.equal(regions[0].languageId, 'pug');
     assert.equal(
@@ -190,7 +195,7 @@ suite('Embedded <template> ', () => {
 </template>
 `;
   test('vue-html region positions', () => {
-    const { regions } = parseStageDocumentRegions(TextDocument.create('test://test.vue', 'vue', 0, htmlSrc));
+    const { regions } = parseDocumentRegions(TextDocument.create('test://test.stage', 'stage', 0, htmlSrc));
 
     assert.equal(regions[0].languageId, 'vue-html');
     assert.equal(
