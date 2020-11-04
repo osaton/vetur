@@ -6,7 +6,6 @@ export type LanguageId =
   | 'stage-html'
   | 'html'
   | 'vue'
-  | 'vue-html'
   | 'pug'
   | 'css'
   | 'postcss'

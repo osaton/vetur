@@ -4,7 +4,7 @@ import * as assert from 'assert';
 import * as path from 'path';
 import * as fs from 'fs';
 import { getTemplateTransformFunctions } from '../transformTemplate';
-import { injectVueTemplate, parseVueTemplate } from '../preprocess';
+import { injectVueTemplate, parseStageTemplate } from '../preprocess';
 import { generateSourceMap } from '../sourceMap';
 import { trim } from 'lodash';
 
@@ -51,7 +51,7 @@ function processVueTemplate(templateCode: string) {
 
 function filePathToTest(filePath: string) {
   const vueFileSrc = fs.readFileSync(filePath, 'utf-8');
-  const templateSrc = parseVueTemplate(vueFileSrc);
+  const templateSrc = parseStageTemplate(vueFileSrc);
   const { sourceMapNodes, validSourceFile } = processVueTemplate(templateSrc);
 
   sourceMapNodes

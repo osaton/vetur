@@ -36,7 +36,7 @@ export class StageHTMLMode extends HTMLMode {
   }
 
   getId() {
-    return 'vue-html'
+    return 'stage-html'
   }
 }
 

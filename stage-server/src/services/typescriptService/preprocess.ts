@@ -34,12 +34,12 @@ function parseVueScriptSrc(text: string): string | undefined {
   return regions.getImportedScripts()[0];
 }
 
-export function parseVueTemplate(text: string): string {
+export function parseStageTemplate(text: string): string {
   const doc = TextDocument.create('test://test/test.vue', 'vue', 0, text);
   const regions = getVueDocumentRegions(doc);
   const template = regions.getSingleTypeDocument('template');
 
-  if (template.languageId !== 'vue-html') {
+  if (template.languageId !== 'stage-html') {
     return '';
   }
   const rawText = template.getText();
@@ -91,7 +91,7 @@ export function createUpdater(tsModule: T_TypeScript, allChildComponentsInfo: Ma
     // TODO: share the logic of transforming the code into AST
     // with the template mode
     const vueText = scriptSnapshot.getText(0, scriptSnapshot.getLength());
-    const templateCode = parseVueTemplate(vueText);
+    const templateCode = parseStageTemplate(vueText);
     const scriptSrc = parseVueScriptSrc(vueText);
     const program = parse(templateCode, { sourceType: 'module' });
 

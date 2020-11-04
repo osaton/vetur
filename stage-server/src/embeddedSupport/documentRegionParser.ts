@@ -90,7 +90,7 @@ export function parseDocumentRegions(document: TextDocument) {
 }
 
 function scanTemplateRegion(scanner: Scanner, text: string): EmbeddedRegion | null {
-  let languageId: LanguageId = 'vue-html';
+  let languageId: LanguageId = 'stage-html';
 
   let token = -1;
   let start = 0;
@@ -102,7 +102,7 @@ function scanTemplateRegion(scanner: Scanner, text: string): EmbeddedRegion | nu
   let lastAttributeName = null;
   while (unClosedTemplate !== 0) {
     // skip parsing on non html syntax, just search terminator
-    if (token === TokenType.AttributeValue && languageId !== 'vue-html') {
+    if (token === TokenType.AttributeValue && languageId !== 'stage-html') {
       while (token !== TokenType.StartTagClose) {
         token = scanner.scan();
       }

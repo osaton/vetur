@@ -51,7 +51,7 @@ import { DependencyService, State } from './dependencyService';
 import * as _ from 'lodash';
 import { DocumentContext, RefactorAction } from '../types';
 import { DocumentService } from './documentService';
-import { VueHTMLMode } from '../modes/template';
+import { StageHTMLMode } from '../modes/template';
 import { logger } from '../log';
 import { getDefaultVLSConfig, VLSFullConfig, VLSConfig } from '../config';
 import { LanguageId } from '../embeddedSupport/embeddedSupport';
@@ -72,12 +72,12 @@ export class LS {
   private cancellationTokenValidationRequests: { [uri: string]: VCancellationTokenSource } = {};
   private validationDelayMs = 200;
   private validation: { [k: string]: boolean } = {
-    'vue-html': true,
+    'stage-html': true,
     html: true,
     css: true,
-    scss: true,
-    less: true,
-    postcss: true,
+    scss: false, // No support, yet
+    less: false, // No support, yet
+    postcss: false, // No support, yet
     javascript: true
   };
   private templateInterpolationValidation = false;
@@ -173,9 +173,9 @@ export class LS {
   }
 
   private setupCustomLSPHandlers() {
-    this.lspConnection.onRequest('$/queryVirtualFileInfo', ({ fileName, currFileText }) => {
-      return (this.languageModes.getMode('vue-html') as VueHTMLMode).queryVirtualFileInfo(fileName, currFileText);
-    });
+    /*this.lspConnection.onRequest('$/queryVirtualFileInfo', ({ fileName, currFileText }) => {
+      return (this.languageModes.getMode('stage-html') as StageHTMLMode).queryVirtualFileInfo(fileName, currFileText);
+    });*/
 
     this.lspConnection.onRequest('$/getDiagnostics', async params => {
       const doc = this.documentService.getDocument(params.uri);
@@ -231,8 +231,8 @@ export class LS {
   configure(config: VLSConfig): void {
     this.config = config;
 
-    const veturValidationOptions = config.vetur.validation;
-    this.validation['vue-html'] = veturValidationOptions.template;
+    /*const veturValidationOptions = config.vetur.validation;
+    this.validation['stage-html'] = veturValidationOptions.template;
     this.validation.css = veturValidationOptions.style;
     this.validation.postcss = veturValidationOptions.style;
     this.validation.scss = veturValidationOptions.style;
@@ -240,6 +240,7 @@ export class LS {
     this.validation.javascript = veturValidationOptions.script;
 
     this.templateInterpolationValidation = config.vetur.experimental.templateInterpolationService;
+    */
 
     this.languageModes.getAllModes().forEach(m => {
       if (m.configure) {
@@ -309,11 +310,11 @@ export class LS {
     const mode = this.languageModes.getModeAtPosition(doc, position);
     if (mode && mode.doComplete) {
       /**
-       * Only use space as trigger character in `vue-html` mode
+       * Only use space as trigger character in `stage-html` mode
        */
       const modeId = mode.getId();
       if (
-        modeId !== 'vue-html' &&
+        modeId !== 'stage-html' &&
         context &&
         context?.triggerKind === CompletionTriggerKind.TriggerCharacter &&
         context.triggerCharacter === ' '
@@ -557,10 +558,6 @@ export class LS {
       for (const lmr of this.languageModes.getAllLanguageModeRangesInDocument(doc)) {
         if (lmr.mode.doValidation) {
           if (this.validation[lmr.mode.getId()]) {
-            pushAll(diagnostics, await lmr.mode.doValidation(doc, cancellationToken));
-          }
-          // Special case for template type checking
-          else if (lmr.mode.getId() === 'vue-html' && this.templateInterpolationValidation) {
             pushAll(diagnostics, await lmr.mode.doValidation(doc, cancellationToken));
           }
         }

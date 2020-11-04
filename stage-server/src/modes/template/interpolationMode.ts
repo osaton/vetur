@@ -186,7 +186,7 @@ export class VueInterpolationMode implements LanguageMode {
           TextEdit.replace(mapBackRange(templateDoc, entry.replacementSpan, templateSourceMap), entry.name),
         data: {
           // data used for resolving item details (see 'doResolve')
-          languageId: 'vue-html',
+          languageId: 'stage-html',
           uri: templateDoc.uri,
           offset: position,
           source: entry.source

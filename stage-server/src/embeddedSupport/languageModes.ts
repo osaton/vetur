@@ -88,7 +88,6 @@ export class LanguageModes {
     html: nullMode,
     vue: nullMode,
     pug: nullMode,
-    'vue-html': nullMode,
     css: nullMode,
     postcss: nullMode,
     scss: nullMode,
@@ -156,7 +155,6 @@ export class LanguageModes {
     );
 
     this.modes['vue'] = getVueMode(workspacePath, globalSnippetDir);
-    this.modes['vue-html'] = vueHtmlMode;
     this.modes['stage-html'] = stageHtmlMode;
     this.modes['pug'] = getPugMode(workspacePath);
     this.modes['css'] = getCSSMode(workspacePath, this.documentRegions);
