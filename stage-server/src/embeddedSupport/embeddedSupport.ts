@@ -1,5 +1,5 @@
 import { TextDocument, Position, Range } from 'vscode-languageserver-types';
-import { parseDocumentRegions, EmbeddedRegion } from './documentRegionParser';
+import { parseDocumentParts, EmbeddedRegion, EmbeddedPart } from './documentRegionParser';
 
 export type LanguageId =
   | 'stage'
@@ -61,18 +61,18 @@ const defaultLanguageIdForBlockTypes: { [type: string]: string } = {
   style: 'css'
 };
 
-export function getVueDocumentRegions(document: TextDocument): VueDocumentRegions {
-  const { regions, importedScripts } = parseDocumentRegions(document);
+export function getStageDocumentRegions(document: TextDocument): VueDocumentRegions {
+  const { parts } = parseDocumentParts(document);
 
   return {
-    getSingleLanguageDocument: (languageId: LanguageId) => getSingleLanguageDocument(document, regions, languageId),
-    getSingleTypeDocument: (type: RegionType) => getSingleTypeDocument(document, regions, type),
+    getSingleLanguageDocument: (languageId: LanguageId) => getSingleLanguageDocument(document, parts, languageId),
+    getSingleTypeDocument: (type: RegionType) => getSingleTypeDocument(document, parts, type),
 
-    getLanguageRangesOfType: (type: RegionType) => getLanguageRangesOfType(document, regions, type),
+    getLanguageRangesOfType: (type: RegionType) => getLanguageRangesOfType(document, parts, type),
 
-    getAllLanguageRanges: () => getAllLanguageRanges(document, regions),
-    getLanguageAtPosition: (position: Position) => getLanguageAtPosition(document, regions, position),
-    getImportedScripts: () => importedScripts
+    getAllLanguageRanges: () => getAllLanguageRanges(document, parts),
+    getLanguageAtPosition: (position: Position) => getLanguageAtPosition(document, parts, position),
+    getImportedScripts: () => []
   };
 }
 
@@ -100,6 +100,25 @@ function getLanguageAtPosition(document: TextDocument, regions: EmbeddedRegion[]
   return 'vue';
 }
 
+/**
+ * Get single document of specific language in `part`
+ */
+export function getSinglePartLanguageDocument(document:TextDocument, part:EmbeddedPart, languageId: LanguageId) {
+  const oldContent = document.getText();
+  let newContent = oldContent
+    .split('\n')
+    .map(line => ' '.repeat(line.length))
+    .join('\n');
+
+  for (const r of part.regions) {
+    if (r.languageId === languageId) {
+      newContent = newContent.slice(0, r.start) + oldContent.slice(r.start, r.end) + newContent.slice(r.end);
+    }
+  }
+
+  return TextDocument.create(document.uri, languageId, document.version, newContent);
+}
+
 export function getSingleLanguageDocument(
   document: TextDocument,
   regions: EmbeddedRegion[],
@@ -119,6 +138,23 @@ export function getSingleLanguageDocument(
 
   return TextDocument.create(document.uri, languageId, document.version, newContent);
 }
+
+export function getSinglePartDocument(document: TextDocument, part: EmbeddedPart) {
+  if (part.type !== 'template') {
+    throw Error(`Invalid type: ${part.type}`)
+  }
+  const oldContent = document.getText();
+  let newContent = oldContent
+    .split('\n')
+    .map(line => ' '.repeat(line.length))
+    .join('\n');
+
+  let langId: string = defaultLanguageIdForBlockTypes[part.type];
+  newContent = newContent.slice(0, part.start) + oldContent.slice(part.start, part.end) + newContent.slice(part.end);
+
+  return TextDocument.create(document.uri, langId, document.version, newContent);
+}
+  
 
 export function getSingleTypeDocument(
   document: TextDocument,

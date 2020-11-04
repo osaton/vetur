@@ -1,46 +1,66 @@
 
 import { TextDocument } from 'vscode-languageserver-types';
 import * as assert from 'assert';
-import { parseDocumentRegions } from '../documentRegionParser';
+import { parseDocumentParts, parsePartRegions } from '../documentRegionParser';
 import { getSingleLanguageDocument, getSingleTypeDocument, getLanguageRangesOfType } from '../embeddedSupport';
 
 suite('New Embedded Support', () => {
   const src = `
 <template>
-  <div class="test"></div>
-  <script>
-    const scriptBlock = true;
-  </script>
-  <div class="test2"></div>
-  <style>
-    .style-block { color: #f0f; }
-  </style>
-  <div class="test3"></div>
+  <div>1</div>
+  <script>const var1 = '1'</script>
+  <div>2</div>
+  <script>const var2 = '2'</script>
+  <style>.class {}</style>
+  <template>template</template>
+  <div>last</div>
+</template>
+<template lang="query">
+  <div>_2</div>
+  <style>.class_2 {}</style>
+</template>
+<template>
+  <div>3</div>
 </template>
 `;
 
-  test('Basic', () => {
-    const { regions } = parseDocumentRegions(TextDocument.create('test://test.stage', 'stage', 0, src));
+  test('Basic parts', () => {
+    const { parts } = parseDocumentParts(TextDocument.create('test://test.stage', 'stage', 0, src));
 
-    console.log(regions);
-    assert.equal(regions[0].languageId, 'html');
-    assert.equal(regions[1].languageId, 'javascript');
-    assert.equal(regions[0].languageId, 'html');
-    assert.equal(regions[2].languageId, 'css');
-    assert.equal(regions[0].languageId, 'html');
+    assert.equal(parts[0].languageId, 'html');
+    assert.equal(parts[1].languageId, 'query');
+    assert.equal(parts[2].languageId, 'html');
   });
 
-  test('Get Single Language Document', () => {
+  test('Basic regions', () => {
+    const { parts } = parseDocumentParts(TextDocument.create('test://test.stage', 'stage', 0, src));
+    
+    const langs = ['html', 'javascript', 'html', 'javascript', 'html', 'css', 'html'];
+
+    langs.forEach((lang, i) => {
+      assert.equal(parts[0].regions[i].languageId, lang);
+    });
+  });
+
+
+  test('Get Single Part Language Document', () => {
     const doc = TextDocument.create('test://test.stage', 'stage', 0, src);
-    const { regions } = parseDocumentRegions(doc);
+    const { parts } = parseDocumentParts(doc);
 
-    const newDoc = getSingleLanguageDocument(doc, regions, 'javascript');
-    const jsSrc = `export default {
-}`;
+    const newDoc = getSingleLanguageDocument(doc, parts[0].regions, 'html');
+    const htmlSrc = `<div>1</div>
+  <script>                </script>
+  <div>2</div>
+  <script>                </script>
+  <style>         </style>
+  <template>template</template>
+  <div>last</div>`;
+
     assert.equal(doc.getText().length, newDoc.getText().length);
-    assert.equal(newDoc.getText().trim(), jsSrc);
+    assert.equal(newDoc.getText().trim(), htmlSrc);
   });
 
+  /*
   test('Get Single RegionType Document', () => {
     const doc = TextDocument.create('test://test.stage', 'stage', 0, src);
     const { regions } = parseDocumentRegions(doc);
@@ -210,4 +230,5 @@ suite('Embedded <template> ', () => {
       ].join('\n')
     );
   });
+  */
 });

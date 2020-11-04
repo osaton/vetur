@@ -3,7 +3,7 @@ import * as path from 'path';
 import { parse } from 'vue-eslint-parser';
 
 import { URI } from 'vscode-uri';
-import { getVueDocumentRegions } from '../../embeddedSupport/embeddedSupport';
+import { getStageDocumentRegions } from '../../embeddedSupport/embeddedSupport';
 import { TextDocument } from 'vscode-languageserver-types';
 import { T_TypeScript } from '../../services/dependencyService';
 import {
@@ -23,20 +23,20 @@ const importedComponentName = '__vlsComponent';
 
 export function parseVueScript(text: string): string {
   const doc = TextDocument.create('test://test/test.vue', 'vue', 0, text);
-  const regions = getVueDocumentRegions(doc);
+  const regions = getStageDocumentRegions(doc);
   const script = regions.getSingleTypeDocument('script');
   return script.getText();
 }
 
 function parseVueScriptSrc(text: string): string | undefined {
   const doc = TextDocument.create('test://test/test.vue', 'vue', 0, text);
-  const regions = getVueDocumentRegions(doc);
+  const regions = getStageDocumentRegions(doc);
   return regions.getImportedScripts()[0];
 }
 
 export function parseStageTemplate(text: string): string {
   const doc = TextDocument.create('test://test/test.vue', 'vue', 0, text);
-  const regions = getVueDocumentRegions(doc);
+  const regions = getStageDocumentRegions(doc);
   const template = regions.getSingleTypeDocument('template');
 
   if (template.languageId !== 'stage-html') {

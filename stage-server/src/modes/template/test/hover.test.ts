@@ -19,6 +19,7 @@ const html = hoverDSL({
 });
 
 suite('HTML Hover', () => {
+  return ;
   test('Attribute', function () {
     // prettier-ignore
     html`<div a|ria-atomic="true"></div>`

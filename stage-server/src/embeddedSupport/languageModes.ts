@@ -24,7 +24,7 @@ import {
 } from 'vscode-languageserver-types';
 
 import { getLanguageModelCache, LanguageModelCache } from './languageModelCache';
-import { getVueDocumentRegions, VueDocumentRegions, LanguageId, LanguageRange } from './embeddedSupport';
+import { getStageDocumentRegions, VueDocumentRegions, LanguageId, LanguageRange } from './embeddedSupport';
 import { getVueMode } from '../modes/vue';
 import { getCSSMode, getSCSSMode, getLESSMode, getPostCSSMode } from '../modes/style';
 import { getJavascriptMode } from '../modes/script/javascript';
@@ -105,7 +105,7 @@ export class LanguageModes {
 
   constructor() {
     this.documentRegions = getLanguageModelCache<VueDocumentRegions>(10, 60, document =>
-      getVueDocumentRegions(document)
+      getStageDocumentRegions(document)
     );
 
     this.modelCaches = [];

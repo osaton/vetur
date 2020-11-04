@@ -24,6 +24,7 @@ const setup: CompletionTestSetup = {
 const html = testDSL(setup);
 
 suite('HTML Completion', () => {
+  return;
   test('Complete Start Tag', () => {
     html`<|`
       .has('iframe')
@@ -252,14 +253,6 @@ suite('HTML Completion', () => {
     html`<div>{{d}}</|`
       .has('/div')
       .become('<div>{{d}}</div>');
-  });
-
-  test('Vue complete', function () {
-    html`<transition type=|></transition>`
-      .has('transition')
-      .become('<transition type="transition"></transition>')
-      .has('animation')
-      .become('<transition type="animation"></transition>');
   });
 
   test('Case sensitivity', function () {

@@ -1,9 +1,10 @@
+import { partial } from 'lodash';
 import { TextDocument } from 'vscode-languageserver-types';
 import { createScanner, TokenType, Scanner } from '../modes/template/parser/htmlScanner';
 import { removeQuotes } from '../utils/strings';
-import { LanguageId } from './embeddedSupport';
+import { getSinglePartDocument, LanguageId } from './embeddedSupport';
 
-export type RegionType = 'template' | 'script' | 'style' | 'custom';
+export type RegionType = 'template' | 'script' | 'style' | 'content';
 
 export interface EmbeddedRegion {
   languageId: LanguageId;
@@ -11,20 +12,50 @@ export interface EmbeddedRegion {
   end: number;
   type: RegionType;
 }
+export interface EmbeddedPart {
+  languageId: LanguageId;
+  start: number;
+  end: number;
+  type: RegionType;
+  regions: EmbeddedRegion[]
+}
 
 const defaultScriptLang = 'javascript';
 const defaultCSSLang = 'css';
 
-export function parseDocumentRegions(document: TextDocument) {
-  const regions: EmbeddedRegion[] = [];
+export function parsePartRegions(document:TextDocument, part:EmbeddedPart) {
+  const doc = getSinglePartDocument(document, part);
+  const text = doc.getText();
+  return parseRegions(text, part);
+}
+
+export function parseDocumentParts(document: TextDocument) {
   const text = document.getText();
+  const res = parseParts(text);
+
+  res.parts.forEach(part => {
+    const { regions } = parsePartRegions(document, part);
+    part.regions = regions;
+  });
+
+  return res;
+}
+
+/**
+ * Parse regions (template, script, styles) of text block
+ * 
+ * @param text 
+ */
+function parseRegions(text:string, part:EmbeddedPart) {
+  const regions: EmbeddedRegion[] = [];
   const scanner = createScanner(text);
   let lastTagName = '';
   let lastAttributeName = '';
   let languageIdFromType: LanguageId | '' = '';
   const importedScripts: string[] = [];
-
+  const contentLanguage = part.languageId;
   let token = scanner.scan();
+
   while (token !== TokenType.EOS) {
     switch (token) {
       case TokenType.Styles:
@@ -47,12 +78,112 @@ export function parseDocumentRegions(document: TextDocument) {
         });
         languageIdFromType = '';
         break;
-      case TokenType.StartTag:
+      /*case TokenType.StartTag:
         const tagName = scanner.getTokenText();
         if (tagName === 'template') {
           const templateRegion = scanTemplateRegion(scanner, text);
           if (templateRegion) {
             regions.push(templateRegion);
+          }
+        }
+        lastTagName = tagName;
+        lastAttributeName = '';
+        break;*/
+      case TokenType.AttributeName:
+        lastAttributeName = scanner.getTokenText();
+        break;
+      case TokenType.AttributeValue:
+        if (lastAttributeName === 'lang') {
+          languageIdFromType = getLanguageIdFromLangAttr(scanner.getTokenText());
+        } else {
+          if (lastAttributeName === 'src' && lastTagName.toLowerCase() === 'script') {
+            let value = scanner.getTokenText();
+            if (value[0] === "'" || value[0] === '"') {
+              value = value.slice(1, value.length - 1);
+            }
+            importedScripts.push(value);
+          }
+        }
+        lastAttributeName = '';
+        break;
+      case TokenType.EndTagClose:
+        lastAttributeName = '';
+        languageIdFromType = '';
+        break;
+    }
+    token = scanner.scan();
+  }
+
+  // Add default language to missing empty spaces
+  const finalizedRegions:EmbeddedRegion[] = [];
+
+  let contentStart = part.start;
+  regions.forEach(region => {
+    // todo: proper type
+    finalizedRegions.push({ languageId: contentLanguage, start: contentStart, end: region.start, type: 'content' });
+    finalizedRegions.push(region);
+    contentStart = region.end;
+  });
+
+  if (contentStart < part.end) {
+    finalizedRegions.push({ languageId: contentLanguage, start: contentStart, end: part.end, type: 'content' });
+  }
+
+  return {
+    regions: finalizedRegions
+  };
+}
+
+/**
+ * Parse regions (template, script, styles) of text block
+ * 
+ * @param text 
+ */
+function parseParts(text:string) {
+  const regions: EmbeddedPart[] = [];
+  const scanner = createScanner(text);
+  let lastTagName = '';
+  let lastAttributeName = '';
+  let languageIdFromType: LanguageId | '' = '';
+  const importedScripts: string[] = [];
+
+  let token = scanner.scan();
+  while (token !== TokenType.EOS) {
+    switch (token) {
+      /*case TokenType.Styles:
+        regions.push({
+          languageId: /^(sass|scss|less|postcss|stylus)$/.test(languageIdFromType)
+            ? (languageIdFromType as LanguageId)
+            : defaultCSSLang,
+          start: scanner.getTokenOffset(),
+          end: scanner.getTokenEnd(),
+          type: 'style',
+          regions: []  
+        });
+        languageIdFromType = '';
+        break;
+      case TokenType.Script:
+        regions.push({
+          languageId: languageIdFromType ? languageIdFromType : defaultScriptLang,
+          start: scanner.getTokenOffset(),
+          end: scanner.getTokenEnd(),
+          type: 'script',
+          regions: []
+        });
+        languageIdFromType = '';
+        break;*/
+      case TokenType.StartTag:
+        const tagName = scanner.getTokenText();
+        if (tagName === 'template') {
+          const templateRegion = scanTemplateRegion(scanner, text);
+          if (templateRegion) {
+            regions.push({
+              languageId: templateRegion.languageId,
+              start: templateRegion.start,
+              end: templateRegion.end,
+              type: templateRegion.type,
+              regions: []
+            });
           }
         }
         lastTagName = tagName;
@@ -84,13 +215,11 @@ export function parseDocumentRegions(document: TextDocument) {
   }
 
   return {
-    regions,
-    importedScripts
+    parts: regions
   };
 }
-
 function scanTemplateRegion(scanner: Scanner, text: string): EmbeddedRegion | null {
-  let languageId: LanguageId = 'stage-html';
+  let languageId: LanguageId = 'html';
 
   let token = -1;
   let start = 0;
@@ -102,7 +231,7 @@ function scanTemplateRegion(scanner: Scanner, text: string): EmbeddedRegion | nu
   let lastAttributeName = null;
   while (unClosedTemplate !== 0) {
     // skip parsing on non html syntax, just search terminator
-    if (token === TokenType.AttributeValue && languageId !== 'stage-html') {
+    if (token === TokenType.AttributeValue && languageId !== 'html') {
       while (token !== TokenType.StartTagClose) {
         token = scanner.scan();
       }

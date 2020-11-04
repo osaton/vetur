@@ -1,6 +1,6 @@
 import * as assert from 'assert';
 import { TextDocument } from 'vscode-languageserver-types';
-import { getVueDocumentRegions } from '../../embeddedSupport/embeddedSupport';
+import { getStageDocumentRegions } from '../../embeddedSupport/embeddedSupport';
 
 const defaultTemplate = `
 <div class="example">{{ msg }}</div>
@@ -27,7 +27,7 @@ function genAttr(lang: string) {
 
 function getLangId(block: string, lang: string) {
   const mapping: { [block: string]: string } = {
-    template: 'vue-html',
+    template: 'html',
     script: 'javascript',
     style: 'css'
   };
@@ -41,8 +41,8 @@ function testcase(description: string) {
 
   const contents: Contents = {
     template: defaultTemplate,
-    script: defaultScript,
-    style: defaultStyle
+    //script: defaultScript,
+    //style: defaultStyle
   };
 
   const langMap: { [block: string]: string } = {
@@ -91,7 +91,7 @@ function testcase(description: string) {
       const doc = TextDocument.create('test://test/test.vue', 'vue', 0, content);
 
       test(description, () => {
-        const ranges = getVueDocumentRegions(doc).getAllLanguageRanges();
+        const ranges = getStageDocumentRegions(doc).getAllLanguageRanges();
         const blocks = activeBlocks();
 
         assert.equal(ranges.length, blocks.length, 'block number mismatch');
@@ -101,7 +101,7 @@ function testcase(description: string) {
         }
         if (offset >= 0) {
           const pos = doc.positionAt(offset);
-          const language = getVueDocumentRegions(doc).getLanguageAtPosition(pos);
+          const language = getStageDocumentRegions(doc).getLanguageAtPosition(pos);
           for (const block of blocks) {
             const content = contents[block];
             if (content && content.indexOf('|') >= 0) {
@@ -147,14 +147,14 @@ suite('Embedded Support', () => {
     .template(`|`)
     .run();
 
-  testcase('empty block')
+  /*testcase('empty block')
     .style(` `)
-    .run();
+    .run();*/
 
-  testcase('lang')
+  /*testcase('lang')
     .template(`.test`, 'pug')
     .style('. test { color: red}', 'sass')
-    .run();
+    .run();*/
 
   testcase('lang attribute')
     .template(`<editor lang="javascript"></editor>`)
@@ -193,8 +193,8 @@ suite('Embedded Support', () => {
     .run();
 
   testcase('ill formed template9')
-    .script('')
-    .style('')
+    //.script('')
+    //.style('')
     .template(`<div></d`)
     .run();
 
