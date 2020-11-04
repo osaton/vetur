@@ -19,12 +19,12 @@ import { getNuxtTagProvider } from './nuxtTags';
 
 export let allTagProviders: IHTMLTagProvider[] = [
   getHTML5TagProvider(),
-  getVueTagProvider(),
-  getRouterTagProvider(),
   elementTagProvider,
-  onsenTagProvider,
-  bootstrapTagProvider,
-  gridsomeTagProvider
+  //getVueTagProvider(), // Disable vue tags providers
+  //getRouterTagProvider(), // Disable vue routing information
+  //onsenTagProvider, // Vue related
+  //bootstrapTagProvider, // Vue related
+  //gridsomeTagProvider // Vue related
 ];
 
 export interface CompletionConfiguration {

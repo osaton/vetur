@@ -36,7 +36,7 @@ export class StageHTMLMode extends HTMLMode {
   }
 
   getId() {
-    return 'stage-html'
+    return 'vue-html'
   }
 }
 
@@ -57,7 +57,7 @@ export class VueHTMLMode implements LanguageMode {
     this.vueInterpolationMode = new VueInterpolationMode(tsModule, serviceHost, vueDocuments, vueInfoService);
   }
   getId() {
-    return 'vue-html';
+    return 'vue2-html';
   }
   configure(c: any) {
     this.htmlMode.configure(c);

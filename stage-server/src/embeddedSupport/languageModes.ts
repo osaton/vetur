@@ -131,7 +131,7 @@ export class LanguageModes {
     });
     this.serviceHost = getServiceHost(tsModule, workspacePath, scriptRegionDocuments);
 
-    const vueHtmlMode = new VueHTMLMode(
+    const vueHtmlMode = new StageHTMLMode(
       tsModule,
       this.serviceHost,
       this.documentRegions,
