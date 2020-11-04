@@ -1,4 +1,3 @@
-
 import { TextDocument } from 'vscode-languageserver-types';
 import * as assert from 'assert';
 import { parseDocumentParts, parsePartRegions } from '../documentRegionParser';
@@ -7,7 +6,7 @@ import { getSingleLanguageDocument, getSingleTypeDocument, getLanguageRangesOfTy
 suite('New Embedded Support', () => {
   const src = `
 <template>
-  <div>1</div>
+  <div>{{test}}</div>
   <script>const var1 = '1'</script>
   <div>2</div>
   <script>const var2 = '2'</script>
@@ -17,6 +16,7 @@ suite('New Embedded Support', () => {
 </template>
 <template lang="query">
   <div>_2</div>
+  <% test %>
   <style>.class_2 {}</style>
 </template>
 <template>
@@ -24,17 +24,30 @@ suite('New Embedded Support', () => {
 </template>
 `;
 
+  const srcStageCode = `<template><div>
+<% 'test';%></div>
+<script> const tota = 'joo'; <% 'tota' %></script>
+<%+ 'test2'; %>
+</template>`;
+
+  const complexStageCode = `<template><div class="<%= 'test' %>>
+<% 'test';%></div>
+<%+ 'test2'; %>
+<script><% 'test' %></script>
+<><% 'test' %></script>
+</template>`;
+
   test('Basic parts', () => {
     const { parts } = parseDocumentParts(TextDocument.create('test://test.stage', 'stage', 0, src));
 
-    assert.equal(parts[0].languageId, 'html');
+    assert.equal(parts[0].languageId, 'stage-html');
     assert.equal(parts[1].languageId, 'query');
-    assert.equal(parts[2].languageId, 'html');
+    assert.equal(parts[2].languageId, 'stage-html');
   });
 
   test('Basic regions', () => {
     const { parts } = parseDocumentParts(TextDocument.create('test://test.stage', 'stage', 0, src));
-    
+
     const langs = ['html', 'javascript', 'html', 'javascript', 'html', 'css', 'html'];
 
     langs.forEach((lang, i) => {
@@ -42,13 +55,32 @@ suite('New Embedded Support', () => {
     });
   });
 
+  test.only('Stage code region', () => {
+    const { parts } = parseDocumentParts(TextDocument.create('test://test.stage', 'stage', 0, srcStageCode));
+
+    const langs = [
+      'html',
+      'stage-code',
+      'html',
+      'javascript',
+      'stage-code',
+      'javascript',
+      'html',
+      'stage-code',
+      'html'
+    ];
+
+    langs.forEach((lang, i) => {
+      assert.equal(parts[0].regions[i].languageId, lang);
+    });
+  });
 
   test('Get Single Part Language Document', () => {
     const doc = TextDocument.create('test://test.stage', 'stage', 0, src);
     const { parts } = parseDocumentParts(doc);
 
     const newDoc = getSingleLanguageDocument(doc, parts[0].regions, 'html');
-    const htmlSrc = `<div>1</div>
+    const htmlSrc = `<div>{{test}}</div>
   <script>                </script>
   <div>2</div>
   <script>                </script>

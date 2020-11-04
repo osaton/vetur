@@ -85,6 +85,7 @@ export class LanguageModes {
   private modes: { [k in LanguageId]: LanguageMode } = {
     stage: nullMode,
     'stage-html': nullMode,
+    'stage-code': nullMode,
     html: nullMode,
     vue: nullMode,
     pug: nullMode,

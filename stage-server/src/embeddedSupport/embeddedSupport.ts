@@ -3,6 +3,7 @@ import { parseDocumentParts, EmbeddedRegion, EmbeddedPart } from './documentRegi
 
 export type LanguageId =
   | 'stage'
+  | 'stage-code'
   | 'stage-html'
   | 'html'
   | 'vue'
@@ -103,7 +104,7 @@ function getLanguageAtPosition(document: TextDocument, regions: EmbeddedRegion[]
 /**
  * Get single document of specific language in `part`
  */
-export function getSinglePartLanguageDocument(document:TextDocument, part:EmbeddedPart, languageId: LanguageId) {
+export function getSinglePartLanguageDocument(document: TextDocument, part: EmbeddedPart, languageId: LanguageId) {
   const oldContent = document.getText();
   let newContent = oldContent
     .split('\n')
@@ -141,7 +142,7 @@ export function getSingleLanguageDocument(
 
 export function getSinglePartDocument(document: TextDocument, part: EmbeddedPart) {
   if (part.type !== 'template') {
-    throw Error(`Invalid type: ${part.type}`)
+    throw Error(`Invalid type: ${part.type}`);
   }
   const oldContent = document.getText();
   let newContent = oldContent
@@ -149,12 +150,11 @@ export function getSinglePartDocument(document: TextDocument, part: EmbeddedPart
     .map(line => ' '.repeat(line.length))
     .join('\n');
 
-  let langId: string = defaultLanguageIdForBlockTypes[part.type];
+  const langId: string = defaultLanguageIdForBlockTypes[part.type];
   newContent = newContent.slice(0, part.start) + oldContent.slice(part.start, part.end) + newContent.slice(part.end);
 
   return TextDocument.create(document.uri, langId, document.version, newContent);
 }
-  
 
 export function getSingleTypeDocument(
   document: TextDocument,

@@ -27,7 +27,7 @@ function genAttr(lang: string) {
 
 function getLangId(block: string, lang: string) {
   const mapping: { [block: string]: string } = {
-    template: 'html',
+    template: 'stage-html',
     script: 'javascript',
     style: 'css'
   };
@@ -40,7 +40,7 @@ function testcase(description: string) {
   }
 
   const contents: Contents = {
-    template: defaultTemplate,
+    template: defaultTemplate
     //script: defaultScript,
     //style: defaultStyle
   };
@@ -119,33 +119,19 @@ function testcase(description: string) {
 suite('Embedded Support', () => {
   testcase('basic').run();
 
-  testcase('nested template')
-    .template(`<div><template></template></div>`)
-    .run();
+  testcase('nested template').template(`<div><template></template></div>`).run();
 
-  testcase('position')
-    .template(`<div|></div>`)
-    .run();
+  testcase('position').template(`<div|></div>`).run();
 
-  testcase('ill position1')
-    .template(`<|`)
-    .run();
+  testcase('ill position1').template(`<|`).run();
 
-  testcase('ill position2')
-    .template(`<div |`)
-    .run();
+  testcase('ill position2').template(`<div |`).run();
 
-  testcase('ill position3')
-    .template(`<div class=""|`)
-    .run();
+  testcase('ill position3').template(`<div class=""|`).run();
 
-  testcase('ill position4')
-    .template(`<div>|`)
-    .run();
+  testcase('ill position4').template(`<div>|`).run();
 
-  testcase('ill position5')
-    .template(`|`)
-    .run();
+  testcase('ill position5').template(`|`).run();
 
   /*testcase('empty block')
     .style(` `)
@@ -156,41 +142,23 @@ suite('Embedded Support', () => {
     .style('. test { color: red}', 'sass')
     .run();*/
 
-  testcase('lang attribute')
-    .template(`<editor lang="javascript"></editor>`)
-    .run();
+  testcase('lang attribute').template(`<editor lang="javascript"></editor>`).run();
 
-  testcase('ill formed template')
-    .template(`<div><template><span</template></div>`)
-    .run();
+  testcase('ill formed template').template(`<div><template><span</template></div>`).run();
 
-  testcase('ill formed template2')
-    .template(`<div><template> <span </template></div>`)
-    .run();
+  testcase('ill formed template2').template(`<div><template> <span </template></div>`).run();
 
-  testcase('ill formed template3')
-    .template(`<`)
-    .run();
+  testcase('ill formed template3').template(`<`).run();
 
-  testcase('ill formed template4')
-    .template(`<div class=`)
-    .run();
+  testcase('ill formed template4').template(`<div class=`).run();
 
-  testcase('ill formed template5')
-    .template(`<div class=></div>`)
-    .run();
+  testcase('ill formed template5').template(`<div class=></div>`).run();
 
-  testcase('ill formed template6')
-    .template(`<div class=""</div>`)
-    .run();
+  testcase('ill formed template6').template(`<div class=""</div>`).run();
 
-  testcase('ill formed template7')
-    .template(`<div><`)
-    .run();
+  testcase('ill formed template7').template(`<div><`).run();
 
-  testcase('ill formed template8')
-    .template(`<div></`)
-    .run();
+  testcase('ill formed template8').template(`<div></`).run();
 
   testcase('ill formed template9')
     //.script('')
@@ -198,11 +166,7 @@ suite('Embedded Support', () => {
     .template(`<div></d`)
     .run();
 
-  testcase('ill formed template10')
-    .template(`<div><template>`)
-    .run();
+  testcase('ill formed template10').template(`<div><template>`).run();
 
-  testcase('ill formed template11')
-    .template(`div(v-bind:prop="x <= 1")`, 'pug')
-    .run();
+  testcase('ill formed template11').template(`div(v-bind:prop="x <= 1")`, 'pug').run();
 });

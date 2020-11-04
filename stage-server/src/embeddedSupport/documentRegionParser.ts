@@ -1,6 +1,8 @@
 import { partial } from 'lodash';
+import { tokenToString } from 'typescript';
 import { TextDocument } from 'vscode-languageserver-types';
 import { createScanner, TokenType, Scanner } from '../modes/template/parser/htmlScanner';
+import { StageCodeScanner } from '../modes/template/parser/stageCodeScanner';
 import { removeQuotes } from '../utils/strings';
 import { getSinglePartDocument, LanguageId } from './embeddedSupport';
 
@@ -11,13 +13,15 @@ export interface EmbeddedRegion {
   start: number;
   end: number;
   type: RegionType;
+  contentStart?: number;
+  contentEnd?: number;
 }
 export interface EmbeddedPart {
   languageId: LanguageId;
   start: number;
   end: number;
   type: RegionType;
-  regions: EmbeddedRegion[]
+  regions: EmbeddedRegion[];
 }
 
 const defaultScriptLang = 'javascript';
@@ -34,13 +38,79 @@ export function parseDocumentParts(document: TextDocument) {
   const res = parseParts(text);
 
   res.parts.forEach(part => {
+    const doc = getSinglePartDocument(document, part);
+    const text = doc.getText();
+    
+    const { regions: stageRegions} = parsePartStageCodeRegions(text, part);
     const { regions } = parsePartRegions(document, part);
-    part.regions = regions;
+
+  
+    part.regions = mergeRegions(regions, stageRegions);
   });
 
   return res;
 }
 
+/**
+ * Merge Stage blocks with other language blocks
+ * 
+ * @param regions 
+ * @param stageRegions 
+ */
+function mergeRegions(regions:EmbeddedRegion[], stageRegions:EmbeddedRegion[]) {
+  const mergedRegions:EmbeddedRegion[] = [];
+
+  if (!stageRegions.length) {
+    return regions;
+  }
+
+  // This mergin could probably be done wiser
+  stageRegions.forEach(stageRegion => {
+    let currentRegion = 0;
+    let region = regions[currentRegion];
+    while(region) {
+
+      // If stageRegion is inside this region
+      if (stageRegion.start > region.start && stageRegion.start < region.end) {
+        const solvedRegion = {
+          languageId: region.languageId,
+          start: region.start,
+          end: stageRegion.start,
+          type: region.type
+        };
+
+        mergedRegions.push(solvedRegion);
+
+        if (stageRegion.end < region.end) {
+          mergedRegions.push(stageRegion);
+          mergedRegions.push({
+            languageId: region.languageId,
+            type: region.type,
+            start: stageRegion.end,
+            end: region.end
+          });
+        }
+      } else {
+        
+      }
+
+      currentRegion++;
+      region = regions[currentRegion];
+    }
+  });
+
+  return mergedRegions;
+}
+
+function parsePartStageCodeRegions(text: string, part:EmbeddedPart) {
+  const scanner = new StageCodeScanner(text);
+
+  const regions = scanner.findAll();
+
+  return {
+    regions
+  };
+}
 /**
  * Parse regions (template, script, styles) of text block
  * 
@@ -49,11 +119,11 @@ export function parseDocumentParts(document: TextDocument) {
 function parseRegions(text:string, part:EmbeddedPart) {
   const regions: EmbeddedRegion[] = [];
   const scanner = createScanner(text);
-  let lastTagName = '';
+  const lastTagName = '';
   let lastAttributeName = '';
   let languageIdFromType: LanguageId | '' = '';
   const importedScripts: string[] = [];
-  const contentLanguage = part.languageId;
+  const contentLanguage = part.languageId === 'stage-html' ? 'html' : part.languageId;
   let token = scanner.scan();
 
   while (token !== TokenType.EOS) {
@@ -150,7 +220,9 @@ function parseParts(text:string) {
   let token = scanner.scan();
   while (token !== TokenType.EOS) {
     switch (token) {
-      /*case TokenType.Styles:
+      /*
+      Not supported at the moment at least
+      case TokenType.Styles:
         regions.push({
           languageId: /^(sass|scss|less|postcss|stylus)$/.test(languageIdFromType)
             ? (languageIdFromType as LanguageId)
@@ -219,7 +291,7 @@ function parseParts(text:string) {
   };
 }
 function scanTemplateRegion(scanner: Scanner, text: string): EmbeddedRegion | null {
-  let languageId: LanguageId = 'html';
+  let languageId: LanguageId = 'stage-html';
 
   let token = -1;
   let start = 0;
@@ -231,7 +303,7 @@ function scanTemplateRegion(scanner: Scanner, text: string): EmbeddedRegion | nu
   let lastAttributeName = null;
   while (unClosedTemplate !== 0) {
     // skip parsing on non html syntax, just search terminator
-    if (token === TokenType.AttributeValue && languageId !== 'html') {
+    if (token === TokenType.AttributeValue && languageId !== 'stage-html') {
       while (token !== TokenType.StartTagClose) {
         token = scanner.scan();
       }

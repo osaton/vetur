@@ -29,7 +29,11 @@ export enum TokenType {
   Unknown,
   Script,
   Styles,
-  EOS
+  EOS,
+  // Stage specific
+  StartStageBlock,
+  EndStageBlock,
+  Stage
 }
 
 class MultiLineStream {
@@ -176,6 +180,7 @@ const _WSP = ' '.charCodeAt(0);
 const _TAB = '\t'.charCodeAt(0);
 const _LCR = '{'.charCodeAt(0);
 const _RCR = '}'.charCodeAt(0);
+const _PRC = '%'.charCodeAt(0);
 
 export enum ScannerState {
   WithinContent,
@@ -189,7 +194,8 @@ export enum ScannerState {
   WithinScriptContent,
   WithinStyleContent,
   AfterAttributeName,
-  BeforeAttributeValue
+  BeforeAttributeValue,
+  WithinStageContent
 }
 
 export interface Scanner {
@@ -279,6 +285,11 @@ export function createScanner(
       case ScannerState.WithinContent:
         if (stream.advanceIfChar(_LAN)) {
           // <
+          if (stream.advanceIfChar(_PRC)) {
+            // %
+            state = ScannerState.WithinStageContent;
+            return finishToken(offset, TokenType.StartStageBlock);
+          }
           if (!stream.eos() && stream.peekChar() === _BNG) {
             // !
             if (stream.advanceIfChars([_BNG, _MIN, _MIN])) {
@@ -309,7 +320,7 @@ export function createScanner(
         if (stream.advanceIfChars([_RCR, _RCR])) {
           state = ScannerState.WithinContent;
           return finishToken(offset, TokenType.EndInterpolation);
-         }
+        }
         stream.advanceUntilChars([_RCR, _RCR]);
         return finishToken(offset, TokenType.InterpolationContent);
       case ScannerState.AfterOpeningEndTag:
@@ -475,6 +486,13 @@ export function createScanner(
         state = ScannerState.WithinContent;
         if (offset < stream.pos()) {
           return finishToken(offset, TokenType.Styles);
+        }
+        return internalScan(); // no advance yet - jump to content
+      case ScannerState.WithinStageContent:
+        stream.advanceUntilRegExp(/%>/i);
+        state = ScannerState.WithinContent;
+        if (offset < stream.pos()) {
+          return finishToken(offset, TokenType.Stage);
         }
         return internalScan(); // no advance yet - jump to content
     }
