@@ -19,7 +19,7 @@ export function initializeLanguageClient(vlsModulePath: string, globalSnippetDir
 
   const devVlsPackagePath = config.get('vetur.dev.vlsPath', '');
   if (devVlsPackagePath && devVlsPackagePath !== '' && existsSync(devVlsPackagePath)) {
-    serverPath = resolve(devVlsPackagePath, 'dist/vueServerMain.js');
+    serverPath = resolve(devVlsPackagePath, 'dist/serverMain.js');
   } else {
     serverPath = vlsModulePath;
   }

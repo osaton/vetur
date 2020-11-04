@@ -1,7 +1,7 @@
 import { TextDocument } from 'vscode-languageserver-types';
 import { createScanner, TokenType, Scanner } from '../modes/template/parser/htmlScanner';
 import { removeQuotes } from '../utils/strings';
-import { LanguageId } from './stageEmbeddedSupport';
+import { LanguageId } from './embeddedSupport';
 
 export type RegionType = 'template' | 'script' | 'style' | 'custom';
 
@@ -14,7 +14,6 @@ export interface EmbeddedRegion {
 
 const defaultScriptLang = 'javascript';
 const defaultCSSLang = 'css';
-const defaultTemplateLang = 'html';
 
 export function parseStageDocumentRegions(document: TextDocument) {
   const regions: EmbeddedRegion[] = [];
@@ -91,7 +90,7 @@ export function parseStageDocumentRegions(document: TextDocument) {
 }
 
 function scanTemplateRegion(scanner: Scanner, text: string): EmbeddedRegion | null {
-  let languageId: LanguageId = 'html';
+  let languageId: LanguageId = 'vue-html';
 
   let token = -1;
   let start = 0;
@@ -103,7 +102,7 @@ function scanTemplateRegion(scanner: Scanner, text: string): EmbeddedRegion | nu
   let lastAttributeName = null;
   while (unClosedTemplate !== 0) {
     // skip parsing on non html syntax, just search terminator
-    if (token === TokenType.AttributeValue && languageId !== 'html') {
+    if (token === TokenType.AttributeValue && languageId !== 'vue-html') {
       while (token !== TokenType.StartTagClose) {
         token = scanner.scan();
       }

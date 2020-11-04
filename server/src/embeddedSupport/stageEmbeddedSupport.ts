@@ -1,9 +1,11 @@
 import { TextDocument, Position, Range } from 'vscode-languageserver-types';
-import { parseVueDocumentRegions, EmbeddedRegion } from './vueDocumentRegionParser';
+//import { parseVueDocumentRegions, EmbeddedRegion } from './vueDocumentRegionParser';
+import { parseStageDocumentRegions, EmbeddedRegion } from './stageDocumentRegionParser';
 
 export type LanguageId =
   | 'vue'
   | 'vue-html'
+  | 'html'
   | 'pug'
   | 'css'
   | 'postcss'
@@ -20,7 +22,7 @@ export interface LanguageRange extends Range {
   attributeValue?: boolean;
 }
 
-export interface VueDocumentRegions {
+export interface StageDocumentRegions {
   /**
    * Get a document where all regions of `languageId` is preserved
    * Whereas other regions are replaced with whitespaces
@@ -54,13 +56,14 @@ export interface VueDocumentRegions {
 type RegionType = 'template' | 'script' | 'style' | 'custom';
 
 const defaultLanguageIdForBlockTypes: { [type: string]: string } = {
-  template: 'vue-html',
+  template: 'html',
   script: 'javascript',
   style: 'css'
 };
 
-export function getVueDocumentRegions(document: TextDocument): VueDocumentRegions {
-  const { regions, importedScripts } = parseVueDocumentRegions(document);
+export function getStageDocumentRegions(document: TextDocument): StageDocumentRegions {
+  //const { regions, importedScripts } = parseVueDocumentRegions(document);
+  const { regions, importedScripts } = parseStageDocumentRegions(document);
 
   return {
     getSingleLanguageDocument: (languageId: LanguageId) => getSingleLanguageDocument(document, regions, languageId),

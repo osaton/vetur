@@ -3,8 +3,7 @@
   "references": [
     { "path": "scripts" },
     { "path": "client" },
-    { "path": "server" },
-    { "path": "vti" },
+    { "path": "stage-server" },
     { "path": "test" }
   ]
 }
