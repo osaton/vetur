@@ -11,7 +11,6 @@ import { findDocumentHighlights } from './services/htmlHighlighting';
 import { findDocumentLinks } from './services/htmlLinks';
 import { findDocumentSymbols } from './services/htmlSymbolsProvider';
 import { htmlFormat } from './services/htmlFormat';
-import { doESLintValidation, createLintEngine } from './services/htmlEslintValidation';
 import { findDefinition } from './services/htmlDefinition';
 import {
   getTagProviderSettings,
@@ -49,7 +48,7 @@ export class HTMLMode implements LanguageMode {
     this.embeddedDocuments = getLanguageModelCache<TextDocument>(10, 60, document =>
       documentRegions.refreshAndGet(document).getSingleLanguageDocument('stage-html')
     );
-    this.lintEngine = createLintEngine(vueVersion);
+    //this.lintEngine = createLintEngine(vueVersion);
   }
 
   getId() {
@@ -79,7 +78,8 @@ export class HTMLMode implements LanguageMode {
     }
     if (this.config.vetur.validation.template) {
       const embedded = this.embeddedDocuments.refreshAndGet(document);
-      diagnostics.push(...doESLintValidation(embedded, this.lintEngine));
+      // eslint disabled for html
+      //diagnostics.push(...doESLintValidation(embedded, this.lintEngine));
     }
 
     return diagnostics;
