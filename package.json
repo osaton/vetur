@@ -65,7 +65,7 @@
   "activationEvents": [
     "onLanguage:stage"
   ],
-  "main": "./dist/client/vueMain",
+  "main": "./dist/client/stageMain",
   "contributes": {
     "commands": [
       {
