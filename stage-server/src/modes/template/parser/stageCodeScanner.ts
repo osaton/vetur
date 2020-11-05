@@ -2,26 +2,30 @@ import { EmbeddedRegion } from '../../../embeddedSupport/documentRegionParser';
 
 // `<% ... %>`
 const blockRegex = /<%([^%>]*)%>/s;
-const blockTypes:Record<string, any> = {
+const blockTypes: Record<string, any> = {
   // `<% `
   ' ': {
     type: 'code',
-    start: 2, end: 2
+    start: 2,
+    end: 2
   },
   // `<%+`
   '+': {
     type: 'output',
-    start: 3, end: 2
+    start: 3,
+    end: 2
   },
   // `<%=`
   '=': {
     type: 'output-safe',
-    start: 3, end: 2
+    start: 3,
+    end: 2
   },
   // `<%=`
   '@': {
     type: 'localisation',
-    start: 3, end: 2
+    start: 3,
+    end: 2
   }
 };
 
@@ -34,7 +38,6 @@ export class StageCodeScanner {
   }
 
   findNext() {
-    
     const str = this.source.substr(this.position);
     const match = str.match(blockRegex);
 
@@ -48,22 +51,22 @@ export class StageCodeScanner {
     const content = match[1];
     const info = blockTypes[content.charAt(0)];
 
-    const res:EmbeddedRegion = {
+    const res: EmbeddedRegion = {
       languageId: 'stage-code',
       start: startPosition,
       type: info.type,
       contentStart: startPosition + info.start,
-      contentEnd: startPosition + content.length - info.end,
-      end: startPosition + content.length
+      contentEnd: startPosition + match[0].length - info.end,
+      end: startPosition + match[0].length
     };
 
     return res;
   }
 
   findAll() {
-    const regions:EmbeddedRegion[] = [];
+    const regions: EmbeddedRegion[] = [];
     let region = this.findNext();
-    while(region) {
+    while (region) {
       regions.push(region);
       region = this.findNext();
     }

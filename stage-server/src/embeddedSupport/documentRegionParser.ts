@@ -27,7 +27,7 @@ export interface EmbeddedPart {
 const defaultScriptLang = 'javascript';
 const defaultCSSLang = 'css';
 
-export function parsePartRegions(document:TextDocument, part:EmbeddedPart) {
+export function parsePartRegions(document: TextDocument, part: EmbeddedPart) {
   const doc = getSinglePartDocument(document, part);
   const text = doc.getText();
   return parseRegions(text, part);
@@ -40,11 +40,10 @@ export function parseDocumentParts(document: TextDocument) {
   res.parts.forEach(part => {
     const doc = getSinglePartDocument(document, part);
     const text = doc.getText();
-    
-    const { regions: stageRegions} = parsePartStageCodeRegions(text, part);
+
+    const { regions: stageRegions } = parsePartStageCodeRegions(text, part);
     const { regions } = parsePartRegions(document, part);
 
-  
     part.regions = mergeRegions(regions, stageRegions);
   });
 
@@ -53,56 +52,101 @@ export function parseDocumentParts(document: TextDocument) {
 
 /**
  * Merge Stage blocks with other language blocks
- * 
- * @param regions 
- * @param stageRegions 
+ *
+ * @param regions
+ * @param stageRegions
  */
-function mergeRegions(regions:EmbeddedRegion[], stageRegions:EmbeddedRegion[]) {
-  const mergedRegions:EmbeddedRegion[] = [];
+function mergeRegions(regions: EmbeddedRegion[], stageRegions: EmbeddedRegion[]) {
+  const mergedRegions: EmbeddedRegion[] = [];
 
   if (!stageRegions.length) {
     return regions;
   }
 
-  // This mergin could probably be done wiser
-  stageRegions.forEach(stageRegion => {
+  // This merge could be more efficient
+  let position = 0;
+  stageRegions.forEach((stageRegion, i) => {
     let currentRegion = 0;
     let region = regions[currentRegion];
-    while(region) {
-
-      // If stageRegion is inside this region
-      if (stageRegion.start > region.start && stageRegion.start < region.end) {
-        const solvedRegion = {
+    let stageBlockSolved = false;
+    while (region && !stageBlockSolved) {
+      const regionStart = position || region.start;
+      if (stageRegion.start === regionStart && stageRegion.end === region.end) {
+        // Stage region overlaps whole language region.
+        // E.g. `<script><%= 'no-js-here' %></script>
+        position = stageRegion.end;
+        mergedRegions.push(stageRegion);
+        regions.splice(currentRegion, 1);
+        stageBlockSolved = true;
+        currentRegion--;
+      } else if (stageRegion.start >= regionStart && stageRegion.start < region.end) {
+        // If Stage code region is inside this region
+        // E.g. <script> const test = <%= 'test' %>; </script>
+        const beforeStageRegion = {
           languageId: region.languageId,
-          start: region.start,
+          start: regionStart,
           end: stageRegion.start,
           type: region.type
         };
 
-        mergedRegions.push(solvedRegion);
+        // Add new part of generic region and stage region
+        mergedRegions.push(beforeStageRegion);
+        mergedRegions.push(stageRegion);
+        position = stageRegion.end;
+        stageBlockSolved = true;
 
+        // The other half of the region, if any
         if (stageRegion.end < region.end) {
-          mergedRegions.push(stageRegion);
-          mergedRegions.push({
+          // Add new part for leftover region
+          const afterStageRegion = {
             languageId: region.languageId,
             type: region.type,
             start: stageRegion.end,
             end: region.end
-          });
+          };
+          // Push to be processed on the next iteration
+          //regions.push(afterStageRegion);
+          regions.splice(currentRegion, 1, afterStageRegion);
+          currentRegion--;
+        } else {
+          // If Stage code region ends at same position with matched language
+          // E.g. <script> const test = <%= 'test' %></script>
+          regions.splice(currentRegion, 1);
+          currentRegion--;
         }
-      } else {
-        
+      } else if (region.end > position) {
+        // No stage block associated with the language at this position
+        const reg = {
+          languageId: region.languageId,
+          type: region.type,
+          start: position,
+          end: region.end
+        };
+        mergedRegions.push(reg);
+        regions.splice(currentRegion, 1);
+        currentRegion--;
+        position = region.end;
       }
 
       currentRegion++;
       region = regions[currentRegion];
     }
+
+    if (!stageBlockSolved) {
+      mergedRegions.push(stageRegion);
+      position = stageRegion.end;
+    }
+  });
+
+  // Regions after the final stage region
+  regions.forEach(region => {
+    mergedRegions.push(region);
   });
 
   return mergedRegions;
 }
 
-function parsePartStageCodeRegions(text: string, part:EmbeddedPart) {
+function parsePartStageCodeRegions(text: string, part: EmbeddedPart) {
   const scanner = new StageCodeScanner(text);
 
   const regions = scanner.findAll();
@@ -113,10 +157,10 @@ function parsePartStageCodeRegions(text: string, part:EmbeddedPart) {
 }
 /**
  * Parse regions (template, script, styles) of text block
- * 
- * @param text 
+ *
+ * @param text
  */
-function parseRegions(text:string, part:EmbeddedPart) {
+function parseRegions(text: string, part: EmbeddedPart) {
   const regions: EmbeddedRegion[] = [];
   const scanner = createScanner(text);
   const lastTagName = '';
@@ -185,7 +229,7 @@ function parseRegions(text:string, part:EmbeddedPart) {
   }
 
   // Add default language to missing empty spaces
-  const finalizedRegions:EmbeddedRegion[] = [];
+  const finalizedRegions: EmbeddedRegion[] = [];
 
   let contentStart = part.start;
   regions.forEach(region => {
@@ -206,10 +250,10 @@ function parseRegions(text:string, part:EmbeddedPart) {
 
 /**
  * Parse regions (template, script, styles) of text block
- * 
- * @param text 
+ *
+ * @param text
  */
-function parseParts(text:string) {
+function parseParts(text: string) {
   const regions: EmbeddedPart[] = [];
   const scanner = createScanner(text);
   let lastTagName = '';

@@ -15,26 +15,29 @@ suite('New Embedded Support', () => {
   <div>last</div>
 </template>
 <template lang="query">
+  SELECT * FROM <%+ 'table '%>
+  WHERE pid > <%= some.value %>
+</template>
+<template>  
   <div>_2</div>
   <% test %>
   <style>.class_2 {}</style>
 </template>
-<template>
-  <div>3</div>
-</template>
 `;
-
   const srcStageCode = `<template><div>
-<% 'test';%></div>
+<% 'test'; %></div>
 <script> const tota = 'joo'; <% 'tota' %></script>
 <%+ 'test2'; %>
 </template>`;
 
-  const complexStageCode = `<template><div class="<%= 'test' %>>
+  const complexStageCode = `<template><div class="<%= 'test' %>">
 <% 'test';%></div>
 <%+ 'test2'; %>
 <script><% 'test' %></script>
-<><% 'test' %></script>
+text<% 'test' %>
+<style><%+ 'test' %></style>
+<script type="<%= 'text' %>">const test = '';</script>
+<style data-param="<%= 'stuff' %>"> .class {} </style>
 </template>`;
 
   test('Basic parts', () => {
@@ -50,43 +53,62 @@ suite('New Embedded Support', () => {
 
     const langs = ['html', 'javascript', 'html', 'javascript', 'html', 'css', 'html'];
 
-    langs.forEach((lang, i) => {
-      assert.equal(parts[0].regions[i].languageId, lang);
-    });
+    const regionLangs = parts[0].regions.map(region => region.languageId);
+    assert.equal(JSON.stringify(regionLangs), JSON.stringify(langs));
   });
 
-  test.only('Stage code region', () => {
-    const { parts } = parseDocumentParts(TextDocument.create('test://test.stage', 'stage', 0, srcStageCode));
+  test('Stage code region', () => {
+    let doc = TextDocument.create('test://test.stage', 'stage', 0, srcStageCode);
+    let { parts } = parseDocumentParts(doc);
+    let langs = ['html', 'stage-code', 'html', 'javascript', 'stage-code', 'html', 'stage-code', 'html'];
 
-    const langs = [
+    let regionLangs = parts[0].regions.map(region => region.languageId);
+    assert.equal(JSON.stringify(regionLangs), JSON.stringify(langs));
+
+    doc = TextDocument.create('test://test.stage', 'stage', 0, complexStageCode);
+    const res = parseDocumentParts(doc);
+    parts = res.parts;
+    langs = [
+      'html',
+      'stage-code',
+      'html',
+      'stage-code',
+      'html',
+      'stage-code',
+      'html',
+      'stage-code',
+      'html',
+      'stage-code',
+      'html',
+      'stage-code',
       'html',
       'stage-code',
       'html',
       'javascript',
-      'stage-code',
-      'javascript',
       'html',
       'stage-code',
+      'html',
+      'css',
       'html'
     ];
 
-    langs.forEach((lang, i) => {
-      assert.equal(parts[0].regions[i].languageId, lang);
-    });
+    regionLangs = parts[0].regions.map(region => region.languageId);
+    assert.equal(JSON.stringify(regionLangs), JSON.stringify(langs));
   });
 
   test('Get Single Part Language Document', () => {
-    const doc = TextDocument.create('test://test.stage', 'stage', 0, src);
+    const doc = TextDocument.create('test://test.stage', 'stage', 0, complexStageCode);
     const { parts } = parseDocumentParts(doc);
-
     const newDoc = getSingleLanguageDocument(doc, parts[0].regions, 'html');
-    const htmlSrc = `<div>{{test}}</div>
-  <script>                </script>
-  <div>2</div>
-  <script>                </script>
-  <style>         </style>
-  <template>template</template>
-  <div>last</div>`;
+    const htmlSrc =
+      '<div class="             ">\n' +
+      '            </div>\n' +
+      '               \n' +
+      '<script>            </script>\n' +
+      'text            \n' +
+      '<style>             </style>\n' +
+      '<script type="             ">                </script>\n' +
+      '<style data-param="              ">           </style>';
 
     assert.equal(doc.getText().length, newDoc.getText().length);
     assert.equal(newDoc.getText().trim(), htmlSrc);
