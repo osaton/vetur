@@ -233,7 +233,6 @@ function parseRegions(text: string, part: EmbeddedPart) {
 
   let contentStart = part.start;
   regions.forEach(region => {
-    // todo: proper type
     finalizedRegions.push({ languageId: contentLanguage, start: contentStart, end: region.start, type: 'content' });
     finalizedRegions.push(region);
     contentStart = region.end;
