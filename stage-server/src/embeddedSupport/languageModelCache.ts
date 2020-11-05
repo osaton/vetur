@@ -6,7 +6,7 @@ export interface LanguageModelCache<T> {
    * - Use `parse` function to re-compute model
    * - Return re-computed model
    */
-  refreshAndGet(document: TextDocument): T;
+  refreshAndGet(document: TextDocument, extraParam?: any): T;
   onDocumentRemoved(document: TextDocument): void;
   dispose(): void;
 }
@@ -14,7 +14,7 @@ export interface LanguageModelCache<T> {
 export function getLanguageModelCache<T>(
   maxEntries: number,
   cleanupIntervalTimeInSec: number,
-  parse: (document: TextDocument) => T
+  parse: (document: TextDocument, extraParam?: any) => T
 ): LanguageModelCache<T> {
   let languageModels: { [uri: string]: { version: number; languageId: string; cTime: number; languageModel: T } } = {};
   let nModels = 0;
@@ -35,7 +35,7 @@ export function getLanguageModelCache<T>(
   }
 
   return {
-    refreshAndGet(document: TextDocument): T {
+    refreshAndGet(document: TextDocument, extraParam?: any): T {
       const version = document.version;
       const languageId = document.languageId;
       const languageModelInfo = languageModels[document.uri];
@@ -43,7 +43,7 @@ export function getLanguageModelCache<T>(
         languageModelInfo.cTime = Date.now();
         return languageModelInfo.languageModel;
       }
-      const languageModel = parse(document);
+      const languageModel = parse(document, extraParam);
       languageModels[document.uri] = { languageModel, version, languageId, cTime: Date.now() };
       if (!languageModelInfo) {
         nModels++;

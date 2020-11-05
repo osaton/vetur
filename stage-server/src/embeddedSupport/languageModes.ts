@@ -24,7 +24,13 @@ import {
 } from 'vscode-languageserver-types';
 
 import { getLanguageModelCache, LanguageModelCache } from './languageModelCache';
-import { getStageDocumentRegions, VueDocumentRegions, LanguageId, LanguageRange } from './embeddedSupport';
+import {
+  getStageDocumentRegions,
+  VueDocumentRegions,
+  LanguageId,
+  LanguageRange,
+  DocumentRegions
+} from './embeddedSupport';
 import { getVueMode } from '../modes/vue';
 import { getCSSMode, getSCSSMode, getLESSMode, getPostCSSMode } from '../modes/style';
 import { getJavascriptMode } from '../modes/script/javascript';
@@ -100,17 +106,23 @@ export class LanguageModes {
     tsx: nullMode
   };
 
-  private documentRegions: LanguageModelCache<VueDocumentRegions>;
+  private documentRegions: LanguageModelCache<DocumentRegions>;
   private modelCaches: LanguageModelCache<any>[];
   private serviceHost: IServiceHost;
 
   constructor() {
-    this.documentRegions = getLanguageModelCache<VueDocumentRegions>(10, 60, document =>
+    this.documentRegions = getLanguageModelCache<DocumentRegions>(10, 60, document =>
       getStageDocumentRegions(document)
     );
 
     this.modelCaches = [];
     this.modelCaches.push(this.documentRegions);
+  }
+
+  getRegionsAtPosition(document: TextDocument, position: Position) {
+    return getLanguageModelCache(10, 60, document => {
+      return this.documentRegions.refreshAndGet(document).getPartAtPosition(position)!.regions;
+    });
   }
 
   async init(workspacePath: string, services: VLSServices, globalSnippetDir?: string) {

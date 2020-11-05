@@ -11,40 +11,31 @@ import * as emmet from 'vscode-emmet-helper';
 import { Priority } from './emmet';
 import { LanguageModelCache, getLanguageModelCache } from '../../embeddedSupport/languageModelCache';
 import { LanguageMode } from '../../embeddedSupport/languageModes';
-import { VueDocumentRegions, LanguageId } from '../../embeddedSupport/embeddedSupport';
+import { VueDocumentRegions, LanguageId, DocumentRegions } from '../../embeddedSupport/embeddedSupport';
 import { getFileFsPath } from '../../utils/paths';
 import { prettierify } from '../../utils/prettier';
 import { ParserOption } from '../../utils/prettier/prettier.d';
 import { NULL_HOVER } from '../nullMode';
 import { VLSFormatConfig } from '../../config';
 
-export function getCSSMode(
-  workspacePath: string,
-  documentRegions: LanguageModelCache<VueDocumentRegions>
-): LanguageMode {
+export function getCSSMode(workspacePath: string, documentRegions: LanguageModelCache<DocumentRegions>): LanguageMode {
   const languageService = getCSSLanguageService();
   return getStyleMode('css', workspacePath, languageService, documentRegions);
 }
 
 export function getPostCSSMode(
   workspacePath: string,
-  documentRegions: LanguageModelCache<VueDocumentRegions>
+  documentRegions: LanguageModelCache<DocumentRegions>
 ): LanguageMode {
   const languageService = getCSSLanguageService();
   return getStyleMode('postcss', workspacePath, languageService, documentRegions);
 }
 
-export function getSCSSMode(
-  workspacePath: string,
-  documentRegions: LanguageModelCache<VueDocumentRegions>
-): LanguageMode {
+export function getSCSSMode(workspacePath: string, documentRegions: LanguageModelCache<DocumentRegions>): LanguageMode {
   const languageService = getSCSSLanguageService();
   return getStyleMode('scss', workspacePath, languageService, documentRegions);
 }
-export function getLESSMode(
-  workspacePath: string,
-  documentRegions: LanguageModelCache<VueDocumentRegions>
-): LanguageMode {
+export function getLESSMode(workspacePath: string, documentRegions: LanguageModelCache<DocumentRegions>): LanguageMode {
   const languageService = getLESSLanguageService();
   return getStyleMode('less', workspacePath, languageService, documentRegions);
 }
@@ -53,11 +44,16 @@ function getStyleMode(
   languageId: LanguageId,
   workspacePath: string,
   languageService: LanguageService,
-  documentRegions: LanguageModelCache<VueDocumentRegions>
+  documentRegions: LanguageModelCache<DocumentRegions>
 ): LanguageMode {
   const embeddedDocuments = getLanguageModelCache(10, 60, document =>
     documentRegions.refreshAndGet(document).getSingleLanguageDocument(languageId)
   );
+
+  const partDocuments = getLanguageModelCache(10, 60, (document, position) =>
+    documentRegions.refreshAndGet(document).getSinglePartLanguageDocument(languageId, position)
+  );
+
   const stylesheets = getLanguageModelCache(10, 60, document => languageService.parseStylesheet(document));
   let config: any = {};
 
@@ -78,7 +74,9 @@ function getStyleMode(
       }
     },
     doComplete(document, position) {
-      const embedded = embeddedDocuments.refreshAndGet(document);
+      // Todo: make this more efficient?
+      const embedded = partDocuments.refreshAndGet(document, position);
+      //const embedded = embeddedDocuments.refreshAndGet(document);
       const emmetSyntax = languageId === 'postcss' ? 'css' : languageId;
       const lsCompletions = languageService.doComplete(embedded, position, stylesheets.refreshAndGet(embedded));
       const lsItems = lsCompletions

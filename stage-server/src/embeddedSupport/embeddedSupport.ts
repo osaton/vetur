@@ -60,13 +60,13 @@ export interface DocumentRegions {
    * Whereas other regions are replaced with whitespaces
    */
   getSingleLanguageDocument(languageId: LanguageId): TextDocument;
-
+  getSinglePartLanguageDocument(languageId: LanguageId, position: Position): TextDocument;
   /**
    * Get a document where all regions of `type` RegionType is preserved
    * Whereas other regions are replaced with whitespaces
    */
   getSingleTypeDocument(type: RegionType): TextDocument;
-
+  getSinglePartTypeDocument(type: RegionType, position: Position): TextDocument;
   /**
    * Get a list of ranges that has `RegionType`
    */
@@ -100,8 +100,24 @@ export function getStageDocumentRegions(document: TextDocument): DocumentRegions
   let activePart: EmbeddedPart = parts[0];
 
   return {
-    getSingleLanguageDocument: (languageId: LanguageId) => getSingleLanguageDocument(document, parts, languageId),
-    getSingleTypeDocument: (type: RegionType) => getSingleTypeDocument(document, parts, type),
+    getSingleLanguageDocument: (languageId: LanguageId) => {
+      const allRegions = parts
+        .map(part => {
+          return part.regions;
+        })
+        .flat();
+
+      return getSingleLanguageDocument(document, allRegions, languageId);
+    },
+    getSinglePartLanguageDocument: (languageId: LanguageId, position: Position) => {
+      const part = getPartAtPosition(document, parts, position);
+      return getSingleLanguageDocument(document, part?.regions || [], languageId);
+    },
+    getSingleTypeDocument: (type: RegionType) => getSingleTypeDocument(document, parts || [], type),
+    getSinglePartTypeDocument: (type: RegionType, position: Position) => {
+      const part = getPartAtPosition(document, parts, position);
+      return getSingleTypeDocument(document, part?.regions || [], type);
+    },
     /*getSingleTypeDocument: (type: RegionType) => {
       return getSingleTypeDocument(document, activePart.regions, type);
     },*/
