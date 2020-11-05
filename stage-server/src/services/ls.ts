@@ -188,7 +188,7 @@ export class LS {
   }
 
   private async setupDynamicFormatters(settings: VLSFullConfig) {
-   if (settings.vetur.format.enable) {
+    if (settings.vetur.format.enable) {
       if (!this.documentFormatterRegistration) {
         this.documentFormatterRegistration = await this.lspConnection.client.register(DocumentFormattingRequest.type, {
           documentSelector: ['stage']
@@ -490,7 +490,7 @@ export class LS {
 
     const doc = this.documentService.getDocument(textDocument.uri)!;
     const mode = this.languageModes.getModeAtPosition(doc, range.start);
-    const posMode = this.languageModes.getModeAtPosition(doc, range.end)
+    const posMode = this.languageModes.getModeAtPosition(doc, range.end);
     if (posMode !== mode) {
       return [];
     }

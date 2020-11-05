@@ -126,8 +126,8 @@ export class LanguageModes {
      * Documents where everything outside `<script>` is replaced with whitespace
      */
     const scriptRegionDocuments = getLanguageModelCache(10, 60, document => {
-      const vueDocument = this.documentRegions.refreshAndGet(document);
-      return vueDocument.getSingleTypeDocument('script');
+      const doc = this.documentRegions.refreshAndGet(document);
+      return doc.getSingleTypeDocument('script');
     });
     this.serviceHost = getServiceHost(tsModule, workspacePath, scriptRegionDocuments);
 
@@ -157,6 +157,7 @@ export class LanguageModes {
 
     this.modes['vue'] = getVueMode(workspacePath, globalSnippetDir);
     this.modes['stage-html'] = stageHtmlMode;
+    this.modes['html'] = stageHtmlMode;
     this.modes['pug'] = getPugMode(workspacePath);
     this.modes['css'] = getCSSMode(workspacePath, this.documentRegions);
     this.modes['postcss'] = getPostCSSMode(workspacePath, this.documentRegions);
