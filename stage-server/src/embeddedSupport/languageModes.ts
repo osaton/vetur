@@ -137,10 +137,17 @@ export class LanguageModes {
     /**
      * Documents where everything outside `<script>` is replaced with whitespace
      */
-    const scriptRegionDocuments = getLanguageModelCache(10, 60, document => {
+    const scriptRegionDocumentsOld = getLanguageModelCache(10, 60, document => {
       const doc = this.documentRegions.refreshAndGet(document);
       return doc.getSingleTypeDocument('script');
     });
+
+    const scriptRegionDocuments = getLanguageModelCache(10, 60, document => {
+      const doc = this.documentRegions.refreshAndGet(document);
+      const typeDoc = doc.getSingleTypeDocument('script');
+      return typeDoc;
+    });
+
     this.serviceHost = getServiceHost(tsModule, workspacePath, scriptRegionDocuments);
 
     const vueHtmlMode = new StageHTMLMode(

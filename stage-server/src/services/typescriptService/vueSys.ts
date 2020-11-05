@@ -1,5 +1,5 @@
 import { T_TypeScript } from '../dependencyService';
-import { parseVueScript } from './preprocess';
+import { parseStageScript } from './preprocess';
 import * as ts from 'typescript';
 import { isVirtualVueFile } from './util';
 
@@ -18,7 +18,7 @@ export function getVueSys(tsModule: T_TypeScript, scriptFileNameSet: Set<string>
     readFile(path, encoding) {
       if (isVirtualVueFile(path, scriptFileNameSet)) {
         const fileText = tsModule.sys.readFile(path.slice(0, -'.ts'.length), encoding);
-        return fileText ? parseVueScript(fileText) : fileText;
+        return fileText ? parseStageScript(fileText) : fileText;
       }
       const fileText = tsModule.sys.readFile(path, encoding);
       return fileText;
@@ -27,7 +27,7 @@ export function getVueSys(tsModule: T_TypeScript, scriptFileNameSet: Set<string>
 
   if (tsModule.sys.realpath) {
     const realpath = tsModule.sys.realpath;
-    vueSys.realpath = function(path) {
+    vueSys.realpath = function (path) {
       if (isVirtualVueFile(path, scriptFileNameSet)) {
         return realpath(path.slice(0, -'.ts'.length)) + '.ts';
       }

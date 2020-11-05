@@ -427,7 +427,7 @@ export class VueInterpolationMode implements LanguageMode {
 
 function getSourceDoc(fileName: string, program: ts.Program): TextDocument {
   const sourceFile = program.getSourceFile(fileName)!;
-  return TextDocument.create(fileName, 'vue', 0, sourceFile.getFullText());
+  return TextDocument.create(fileName, 'stage', 0, sourceFile.getFullText());
 }
 
 function convertRange(document: TextDocument, span: ts.TextSpan): Range {

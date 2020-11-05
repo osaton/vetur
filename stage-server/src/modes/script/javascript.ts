@@ -29,7 +29,7 @@ import {
   CompletionItemTag
 } from 'vscode-languageserver-types';
 import { LanguageMode } from '../../embeddedSupport/languageModes';
-import { VueDocumentRegions, LanguageRange } from '../../embeddedSupport/embeddedSupport';
+import { VueDocumentRegions, LanguageRange, DocumentRegions } from '../../embeddedSupport/embeddedSupport';
 import { prettierify, prettierEslintify, prettierTslintify } from '../../utils/prettier';
 import { getFileFsPath, getFilePath } from '../../utils/paths';
 
@@ -56,7 +56,7 @@ export const APPLY_REFACTOR_COMMAND = 'vetur.applyRefactorCommand';
 
 export async function getJavascriptMode(
   serviceHost: IServiceHost,
-  documentRegions: LanguageModelCache<VueDocumentRegions>,
+  documentRegions: LanguageModelCache<DocumentRegions>,
   workspacePath: string | undefined,
   vueInfoService?: VueInfoService,
   dependencyService?: DependencyService
@@ -66,7 +66,8 @@ export async function getJavascriptMode(
       ...nullMode
     };
   }
-  const jsDocuments = getLanguageModelCache(10, 60, document => {
+
+  const jsDocuments = getLanguageModelCache(10, 60, (document, position) => {
     const vueDocument = documentRegions.refreshAndGet(document);
     return vueDocument.getSingleTypeDocument('script');
   });
@@ -85,7 +86,7 @@ export async function getJavascriptMode(
     }
   }
 
-  const { updateCurrentVueTextDocument } = serviceHost;
+  const { updateCurrentStageTextDocument } = serviceHost;
   let config: any = {};
   let supportedCodeFixCodes: Set<number>;
 
@@ -138,7 +139,7 @@ export async function getJavascriptMode(
         return;
       }
 
-      const { service } = updateCurrentVueTextDocument(doc);
+      const { service } = updateCurrentStageTextDocument(doc);
       const fileFsPath = getFileFsPath(doc.uri);
       const info = getComponentInfo(tsModule, service, fileFsPath, config);
       if (info) {
@@ -150,7 +151,7 @@ export async function getJavascriptMode(
       if (await isVCancellationRequested(cancellationToken)) {
         return [];
       }
-      const { scriptDoc, service } = updateCurrentVueTextDocument(doc);
+      const { scriptDoc, service } = updateCurrentStageTextDocument(doc);
       if (!languageServiceIncludesFile(service, doc.uri)) {
         return [];
       }
@@ -198,7 +199,7 @@ export async function getJavascriptMode(
       });
     },
     doComplete(doc: TextDocument, position: Position): CompletionList {
-      const { scriptDoc, service } = updateCurrentVueTextDocument(doc);
+      const { scriptDoc, service } = updateCurrentStageTextDocument(doc);
       if (!languageServiceIncludesFile(service, doc.uri)) {
         return { isIncomplete: false, items: [] };
       }
@@ -209,6 +210,7 @@ export async function getJavascriptMode(
       if (NON_SCRIPT_TRIGGERS.includes(triggerChar)) {
         return { isIncomplete: false, items: [] };
       }
+
       const completions = service.getCompletionsAtPosition(fileFsPath, offset, {
         ...getUserPreferences(scriptDoc),
         triggerCharacter: getTsTriggerCharacter(triggerChar),
@@ -293,7 +295,7 @@ export async function getJavascriptMode(
       }
     },
     doResolve(doc: TextDocument, item: CompletionItem): CompletionItem {
-      const { scriptDoc, service } = updateCurrentVueTextDocument(doc);
+      const { scriptDoc, service } = updateCurrentStageTextDocument(doc);
       if (!languageServiceIncludesFile(service, doc.uri)) {
         return item;
       }
@@ -343,7 +345,7 @@ export async function getJavascriptMode(
       return item;
     },
     doHover(doc: TextDocument, position: Position): Hover {
-      const { scriptDoc, service } = updateCurrentVueTextDocument(doc);
+      const { scriptDoc, service } = updateCurrentStageTextDocument(doc);
       if (!languageServiceIncludesFile(service, doc.uri)) {
         return { contents: [] };
       }
@@ -381,7 +383,7 @@ export async function getJavascriptMode(
       return { contents: [] };
     },
     doSignatureHelp(doc: TextDocument, position: Position): SignatureHelp | null {
-      const { scriptDoc, service } = updateCurrentVueTextDocument(doc);
+      const { scriptDoc, service } = updateCurrentStageTextDocument(doc);
       if (!languageServiceIncludesFile(service, doc.uri)) {
         return NULL_SIGNATURE;
       }
@@ -439,7 +441,7 @@ export async function getJavascriptMode(
       };
     },
     findDocumentHighlight(doc: TextDocument, position: Position): DocumentHighlight[] {
-      const { scriptDoc, service } = updateCurrentVueTextDocument(doc);
+      const { scriptDoc, service } = updateCurrentStageTextDocument(doc);
       if (!languageServiceIncludesFile(service, doc.uri)) {
         return [];
       }
@@ -457,7 +459,7 @@ export async function getJavascriptMode(
       return [];
     },
     findDocumentSymbols(doc: TextDocument): SymbolInformation[] {
-      const { scriptDoc, service } = updateCurrentVueTextDocument(doc);
+      const { scriptDoc, service } = updateCurrentStageTextDocument(doc);
       if (!languageServiceIncludesFile(service, doc.uri)) {
         return [];
       }
@@ -497,7 +499,7 @@ export async function getJavascriptMode(
       return result;
     },
     findDefinition(doc: TextDocument, position: Position): Definition {
-      const { scriptDoc, service } = updateCurrentVueTextDocument(doc);
+      const { scriptDoc, service } = updateCurrentStageTextDocument(doc);
       if (!languageServiceIncludesFile(service, doc.uri)) {
         return [];
       }
@@ -523,7 +525,7 @@ export async function getJavascriptMode(
       return definitionResults;
     },
     findReferences(doc: TextDocument, position: Position): Location[] {
-      const { scriptDoc, service } = updateCurrentVueTextDocument(doc);
+      const { scriptDoc, service } = updateCurrentStageTextDocument(doc);
       if (!languageServiceIncludesFile(service, doc.uri)) {
         return [];
       }
@@ -551,7 +553,7 @@ export async function getJavascriptMode(
       return referenceResults;
     },
     getFoldingRanges(doc) {
-      const { scriptDoc, service } = updateCurrentVueTextDocument(doc);
+      const { scriptDoc, service } = updateCurrentStageTextDocument(doc);
       if (!languageServiceIncludesFile(service, doc.uri)) {
         return [];
       }
@@ -582,7 +584,7 @@ export async function getJavascriptMode(
       });
     },
     getCodeActions(doc, range, _formatParams, context) {
-      const { scriptDoc, service } = updateCurrentVueTextDocument(doc);
+      const { scriptDoc, service } = updateCurrentStageTextDocument(doc);
       const fileName = getFileFsPath(scriptDoc.uri);
       const start = scriptDoc.offsetAt(range.start);
       const end = scriptDoc.offsetAt(range.end);
@@ -619,7 +621,7 @@ export async function getJavascriptMode(
       return result;
     },
     getRefactorEdits(doc: TextDocument, args: RefactorAction): WorkspaceEdit {
-      const { service } = updateCurrentVueTextDocument(doc);
+      const { service } = updateCurrentStageTextDocument(doc);
       const response = service.getEditsForRefactor(
         args.fileName,
         args.formatOptions,
@@ -635,7 +637,7 @@ export async function getJavascriptMode(
       return { changes: createUriMappingForEdits(response.edits, service) };
     },
     format(doc: TextDocument, range: Range, formatParams: FormattingOptions): TextEdit[] {
-      const { scriptDoc, service } = updateCurrentVueTextDocument(doc);
+      const { scriptDoc, service } = updateCurrentStageTextDocument(doc);
 
       const defaultFormatter =
         scriptDoc.languageId === 'javascript'

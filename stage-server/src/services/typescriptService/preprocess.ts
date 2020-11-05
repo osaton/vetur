@@ -21,8 +21,8 @@ import { kebabCase, snakeCase } from 'lodash';
 
 const importedComponentName = '__vlsComponent';
 
-export function parseVueScript(text: string): string {
-  const doc = TextDocument.create('test://test/test.vue', 'vue', 0, text);
+export function parseStageScript(text: string): string {
+  const doc = TextDocument.create('test://test/test.stage', 'stage', 0, text);
   const regions = getStageDocumentRegions(doc);
   const script = regions.getSingleTypeDocument('script');
   return script.getText();
@@ -37,6 +37,7 @@ function parseVueScriptSrc(text: string): string | undefined {
 export function parseStageTemplate(text: string): string {
   const doc = TextDocument.create('test://test/test.vue', 'vue', 0, text);
   const regions = getStageDocumentRegions(doc);
+  // todo: check this one, do we want the full document
   const template = regions.getSingleTypeDocument('template');
 
   if (template.languageId !== 'stage-html') {

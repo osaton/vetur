@@ -99,21 +99,23 @@ export function getStageDocumentRegions(document: TextDocument): DocumentRegions
 
   let activePart: EmbeddedPart = parts[0];
 
+  function getAllRegions(parts: EmbeddedPart[]): EmbeddedRegion[] {
+    return parts
+      .map(part => {
+        return part.regions;
+      })
+      .flat();
+  }
+
   return {
     getSingleLanguageDocument: (languageId: LanguageId) => {
-      const allRegions = parts
-        .map(part => {
-          return part.regions;
-        })
-        .flat();
-
-      return getSingleLanguageDocument(document, allRegions, languageId);
+      return getSingleLanguageDocument(document, getAllRegions(parts), languageId);
     },
     getSinglePartLanguageDocument: (languageId: LanguageId, position: Position) => {
       const part = getPartAtPosition(document, parts, position);
       return getSingleLanguageDocument(document, part?.regions || [], languageId);
     },
-    getSingleTypeDocument: (type: RegionType) => getSingleTypeDocument(document, parts || [], type),
+    getSingleTypeDocument: (type: RegionType) => getSingleTypeDocument(document, getAllRegions(parts), type),
     getSinglePartTypeDocument: (type: RegionType, position: Position) => {
       const part = getPartAtPosition(document, parts, position);
       return getSingleTypeDocument(document, part?.regions || [], type);

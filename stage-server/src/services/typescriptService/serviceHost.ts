@@ -5,13 +5,13 @@ import { TextDocument } from 'vscode-languageserver-types';
 import * as parseGitIgnore from 'parse-gitignore';
 
 import { LanguageModelCache } from '../../embeddedSupport/languageModelCache';
-import { createUpdater, parseVueScript } from './preprocess';
+import { createUpdater, parseStageScript } from './preprocess';
 import { getFileFsPath, getFilePath, normalizeFileNameToFsPath } from '../../utils/paths';
 import * as bridge from './bridge';
 import { T_TypeScript } from '../../services/dependencyService';
 import { getVueSys } from './vueSys';
 import { TemplateSourceMap, stringifySourceMapNodes } from './sourceMap';
-import { isVirtualVueTemplateFile, isVueFile } from './util';
+import { isStageFile, isVirtualVueTemplateFile, isVueFile } from './util';
 import { logger } from '../../log';
 import { ModuleResolutionCache } from './moduleResolutionCache';
 import { globalScope } from './transformTemplate';
@@ -64,6 +64,12 @@ export interface IServiceHost {
     templateSourceMap: TemplateSourceMap;
   };
   updateCurrentVueTextDocument(
+    doc: TextDocument
+  ): {
+    service: ts.LanguageService;
+    scriptDoc: TextDocument;
+  };
+  updateCurrentStageTextDocument(
     doc: TextDocument
   ): {
     service: ts.LanguageService;
@@ -167,6 +173,41 @@ export function getServiceHost(
     };
   }
 
+  function updateCurrentStageTextDocument(doc: TextDocument) {
+    const fileFsPath = getFileFsPath(doc.uri);
+    const filePath = getFilePath(doc.uri);
+    // When file is not in language service, add it
+    if (!localScriptRegionDocuments.has(fileFsPath)) {
+      if (fileFsPath.endsWith('.stage')) {
+        scriptFileNameSet.add(filePath);
+      }
+    }
+
+    if (!currentScriptDoc || doc.uri !== currentScriptDoc.uri || doc.version !== currentScriptDoc.version) {
+      currentScriptDoc = updatedScriptRegionDocuments.refreshAndGet(doc)!;
+      const localLastDoc = localScriptRegionDocuments.get(fileFsPath);
+      if (localLastDoc && currentScriptDoc.languageId !== localLastDoc.languageId) {
+        // if languageId changed, restart the language service; it can't handle file type changes
+        jsLanguageService.dispose();
+        jsLanguageService = tsModule.createLanguageService(jsHost);
+      }
+      localScriptRegionDocuments.set(fileFsPath, currentScriptDoc);
+      scriptFileNameSet.add(filePath);
+      versions.set(fileFsPath, (versions.get(fileFsPath) || 0) + 1);
+      projectVersion++;
+    }
+
+    // Just checking
+    // jsLanguageService.dispose();
+    // jsLanguageService = tsModule.createLanguageService(jsHost);
+    // const program = jsLanguageService.getProgram();
+
+    return {
+      service: jsLanguageService,
+      scriptDoc: currentScriptDoc
+    };
+  }
+
   function updateCurrentVueTextDocument(doc: TextDocument) {
     const fileFsPath = getFileFsPath(doc.uri);
     const filePath = getFilePath(doc.uri);
@@ -225,7 +266,10 @@ export function getServiceHost(
     return {
       getProjectVersion: () => projectVersion.toString(),
       getCompilationSettings: () => options,
-      getScriptFileNames: () => Array.from(scriptFileNameSet),
+      getScriptFileNames: () => {
+        const fileNames = Array.from(scriptFileNameSet);
+        return fileNames;
+      },
       getScriptVersion(fileName) {
         if (fileName.includes('node_modules')) {
           return '0';
@@ -244,18 +288,19 @@ export function getServiceHost(
           return (tsModule as any).getScriptKindFromFileName(fileName);
         }
 
-        if (isVueFile(fileName)) {
+        if (isStageFile(fileName)) {
           const uri = URI.file(fileName);
           const fileFsPath = normalizeFileNameToFsPath(fileName);
           let doc = localScriptRegionDocuments.get(fileFsPath);
           if (!doc) {
             doc = updatedScriptRegionDocuments.refreshAndGet(
-              TextDocument.create(uri.toString(), 'vue', 0, tsModule.sys.readFile(fileName) || '')
+              TextDocument.create(uri.toString(), 'stage', 0, tsModule.sys.readFile(fileName) || '')
             );
             localScriptRegionDocuments.set(fileFsPath, doc);
             scriptFileNameSet.add(fileName);
           }
-          return getScriptKind(tsModule, doc.languageId);
+          const kind = getScriptKind(tsModule, doc.languageId);
+          return kind;
         } else if (isVirtualVueTemplateFile(fileName)) {
           return tsModule.ScriptKind.JS;
         } else {
@@ -392,7 +437,7 @@ export function getServiceHost(
         }
 
         // js/ts files in workspace
-        if (!isVueFile(fileFsPath)) {
+        if (!isStageFile(fileFsPath)) {
           if (projectFileSnapshots.has(fileFsPath)) {
             return projectFileSnapshots.get(fileFsPath);
           }
@@ -406,7 +451,7 @@ export function getServiceHost(
           return snapshot;
         }
 
-        // vue files in workspace
+        // stage files in workspace
         const doc = localScriptRegionDocuments.get(fileFsPath);
         let fileText = '';
         if (doc) {
@@ -415,7 +460,7 @@ export function getServiceHost(
           // Note: This is required in addition to the parsing in embeddedSupport because
           // this works for .vue files that aren't even loaded by VS Code yet.
           const rawVueFileText = tsModule.sys.readFile(fileFsPath) || '';
-          fileText = parseVueScript(rawVueFileText);
+          fileText = parseStageScript(rawVueFileText);
         }
 
         return {
@@ -448,6 +493,7 @@ export function getServiceHost(
     queryVirtualFileInfo,
     updateCurrentVirtualVueTextDocument,
     updateCurrentVueTextDocument,
+    updateCurrentStageTextDocument,
     updateExternalDocument,
     dispose: () => {
       jsLanguageService.dispose();
@@ -518,7 +564,7 @@ function getParsedConfig(tsModule: T_TypeScript, workspacePath: string) {
     /*resolutionStack*/ undefined,
     [
       {
-        extension: 'vue',
+        extension: 'stage',
         isMixedContent: true,
         // Note: in order for parsed config to include *.vue files, scriptKind must be set to Deferred.
         // tslint:disable-next-line max-line-length
