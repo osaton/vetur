@@ -25,7 +25,7 @@
       "request": "attach",
       "port": 6005,
       "sourceMaps": true,
-      "outFiles": ["${workspaceFolder}/server/dist/**/*.js"],
+      "outFiles": ["${workspaceFolder}/stage-server/dist/**/*.js"],
       "protocol": "inspector",
       "restart": true,
       "smartStep": true,
