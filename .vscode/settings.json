@@ -1,5 +1,7 @@
 {
   "files.exclude": {
     "docs/_book": true
-  }
+  },
+  "editor.defaultFormatter": "esbenp.prettier-vscode",
+	"editor.formatOnSave": true,
 }
