@@ -54,6 +54,38 @@ export interface VueDocumentRegions {
   getImportedScripts(): string[];
 }
 
+export interface DocumentRegions {
+  /**
+   * Get a document where all regions of `languageId` is preserved
+   * Whereas other regions are replaced with whitespaces
+   */
+  getSingleLanguageDocument(languageId: LanguageId): TextDocument;
+
+  /**
+   * Get a document where all regions of `type` RegionType is preserved
+   * Whereas other regions are replaced with whitespaces
+   */
+  getSingleTypeDocument(type: RegionType): TextDocument;
+
+  /**
+   * Get a list of ranges that has `RegionType`
+   */
+  getLanguageRangesOfType(type: RegionType): LanguageRange[];
+
+  /**
+   * Get all language ranges inside document
+   */
+  getAllLanguageRanges(): LanguageRange[];
+
+  /**
+   * Get language for determining
+   */
+  getLanguageAtPosition(position: Position): LanguageId;
+
+  getPartAtPosition(position: Position): EmbeddedPart | null;
+  getImportedScripts(): string[];
+}
+
 type RegionType = 'template' | 'script' | 'style' | 'custom';
 
 const defaultLanguageIdForBlockTypes: { [type: string]: string } = {
@@ -62,17 +94,28 @@ const defaultLanguageIdForBlockTypes: { [type: string]: string } = {
   style: 'css'
 };
 
-export function getStageDocumentRegions(document: TextDocument): VueDocumentRegions {
+export function getStageDocumentRegions(document: TextDocument): DocumentRegions {
   const { parts } = parseDocumentParts(document);
+
+  let activePart: EmbeddedPart = parts[0];
 
   return {
     getSingleLanguageDocument: (languageId: LanguageId) => getSingleLanguageDocument(document, parts, languageId),
     getSingleTypeDocument: (type: RegionType) => getSingleTypeDocument(document, parts, type),
-
+    /*getSingleTypeDocument: (type: RegionType) => {
+      return getSingleTypeDocument(document, activePart.regions, type);
+    },*/
     getLanguageRangesOfType: (type: RegionType) => getLanguageRangesOfType(document, parts, type),
 
     getAllLanguageRanges: () => getAllLanguageRanges(document, parts),
     getLanguageAtPosition: (position: Position) => getLanguageAtPosition(document, parts, position),
+    getPartAtPosition: (position: Position) => {
+      const part = getPartAtPosition(document, parts, position);
+      if (part) {
+        activePart = part;
+      }
+      return part;
+    },
     getImportedScripts: () => []
   };
 }
@@ -87,9 +130,29 @@ function getAllLanguageRanges(document: TextDocument, regions: EmbeddedRegion[])
   });
 }
 
-function getLanguageAtPosition(document: TextDocument, regions: EmbeddedRegion[], position: Position): LanguageId {
+function getPartAtPosition(document: TextDocument, parts: EmbeddedPart[], position: Position): EmbeddedPart | null {
   const offset = document.offsetAt(position);
-  for (const region of regions) {
+  for (const part of parts) {
+    if (part.start <= offset) {
+      if (offset <= part.end) {
+        return part;
+      }
+    } else {
+      break;
+    }
+  }
+
+  return null;
+}
+
+function getLanguageAtPosition(document: TextDocument, parts: EmbeddedPart[], position: Position): LanguageId {
+  const part = getPartAtPosition(document, parts, position);
+  if (!part) {
+    return 'stage';
+  }
+
+  const offset = document.offsetAt(position);
+  for (const region of part.regions) {
     if (region.start <= offset) {
       if (offset <= region.end) {
         return region.languageId;
@@ -98,7 +161,7 @@ function getLanguageAtPosition(document: TextDocument, regions: EmbeddedRegion[]
       break;
     }
   }
-  return 'vue';
+  return 'stage';
 }
 
 /**
