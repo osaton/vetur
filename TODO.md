@@ -1,3 +1,7 @@
 - registerLanguageConfigurations: auto closing stuff
 - stage code mode
   - module / stageModule support
+  - localisation hints for <%@, \$.loc and Stage.loc
+  - module completion hints for stageRequire (and native for reguire
+  - scriptlet completion hints for all refs that we can
+    - start with easiest cm-scriptlet
