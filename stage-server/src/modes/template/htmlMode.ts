@@ -3,7 +3,7 @@ import * as _ from 'lodash';
 import { LanguageModelCache, getLanguageModelCache } from '../../embeddedSupport/languageModelCache';
 import { TextDocument, Position, Range, FormattingOptions } from 'vscode-languageserver-types';
 import { LanguageMode } from '../../embeddedSupport/languageModes';
-import { VueDocumentRegions } from '../../embeddedSupport/embeddedSupport';
+import { LanguageId, VueDocumentRegions } from '../../embeddedSupport/embeddedSupport';
 import { HTMLDocument } from './parser/htmlParser';
 import { doComplete } from './services/htmlCompletion';
 import { doHover } from './services/htmlHover';
@@ -41,12 +41,13 @@ export class HTMLMode implements LanguageMode {
     private workspacePath: string | undefined,
     vueVersion: VueVersion,
     private vueDocuments: LanguageModelCache<HTMLDocument>,
+    languageId: LanguageId,
     private vueInfoService?: VueInfoService
   ) {
     this.tagProviderSettings = getTagProviderSettings(workspacePath);
     this.enabledTagProviders = getEnabledTagProviders(this.tagProviderSettings);
     this.embeddedDocuments = getLanguageModelCache<TextDocument>(10, 60, document =>
-      documentRegions.refreshAndGet(document).getSingleLanguageDocument('html')
+      documentRegions.refreshAndGet(document).getSingleLanguageDocument(languageId)
     );
     //this.lintEngine = createLintEngine(vueVersion);
   }

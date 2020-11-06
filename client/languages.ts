@@ -20,7 +20,7 @@ const EMPTY_ELEMENTS: string[] = [
 ];
 
 export function registerLanguageConfigurations() {
-  languages.setLanguageConfiguration('vue-html', {
+  languages.setLanguageConfiguration('stage-html', {
     wordPattern: /(-?\d*\.\d\w*)|([^\`\~\!\@\$\^\&\*\(\)\=\+\[\{\]\}\\\|\;\:\'\"\,\.\<\>\/\s]+)/g,
     onEnterRules: [
       {
@@ -34,4 +34,49 @@ export function registerLanguageConfigurations() {
       }
     ]
   });
+
+  languages.setLanguageConfiguration('stage-code', {
+    wordPattern: /(-?\d*\.\d\w*)|([^\`\~\!\@\$\^\&\*\(\)\=\+\[\{\]\}\\\|\;\:\'\"\,\.\<\>\/\s]+)/g,
+    onEnterRules: [
+      {
+        beforeText: /<%[=+]?\s+$/,
+        afterText: /^%>/,
+        action: { indentAction: IndentAction.IndentOutdent }
+      }
+    ]
+  });
+  // Stage template block
+
+  /**
+   * for js
+   */
+
+  const store = [
+    {
+      // e.g. /** | */
+      beforeText: /^\s*\/\*\*(?!\/)([^\*]|\*(?!\/))*$/,
+      afterText: /^\s*\*\/$/,
+      action: { indentAction: IndentAction.IndentOutdent, appendText: ' * ' }
+    },
+    {
+      // e.g. /** ...|
+      beforeText: /^\s*\/\*\*(?!\/)([^\*]|\*(?!\/))*$/,
+      action: { indentAction: IndentAction.None, appendText: ' * ' }
+    },
+    {
+      // e.g.  * ...|
+      beforeText: /^(\t|(\ \ ))*\ \*(\ ([^\*]|\*(?!\/))*)?$/,
+      action: { indentAction: IndentAction.None, appendText: '* ' }
+    },
+    {
+      // e.g.  */|
+      beforeText: /^(\t|(\ \ ))*\ \*\/\s*$/,
+      action: { indentAction: IndentAction.None, removeText: 1 }
+    },
+    {
+      // e.g.  *-----*/|
+      beforeText: /^(\t|(\ \ ))*\ \*[^/]*\*\/\s*$/,
+      action: { indentAction: IndentAction.None, removeText: 1 }
+    }
+  ];
 }

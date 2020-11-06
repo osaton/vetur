@@ -32,11 +32,11 @@ export class StageHTMLMode extends HTMLMode {
   ) {
     const vueDocuments = getLanguageModelCache<HTMLDocument>(10, 60, document => parseHTMLDocument(document));
     const vueVersion = inferVueVersion(tsModule, workspacePath);
-    super(documentRegions, workspacePath, vueVersion, vueDocuments, vueInfoService)
+    super(documentRegions, workspacePath, vueVersion, vueDocuments, 'stage-html', vueInfoService);
   }
 
   getId() {
-    return 'stage-html'
+    return 'stage-html';
   }
 }
 
@@ -53,11 +53,11 @@ export class VueHTMLMode implements LanguageMode {
   ) {
     const vueDocuments = getLanguageModelCache<HTMLDocument>(10, 60, document => parseHTMLDocument(document));
     const vueVersion = inferVueVersion(tsModule, workspacePath);
-    this.htmlMode = new HTMLMode(documentRegions, workspacePath, vueVersion, vueDocuments, vueInfoService);
+    this.htmlMode = new HTMLMode(documentRegions, workspacePath, vueVersion, vueDocuments, 'html', vueInfoService);
     this.vueInterpolationMode = new VueInterpolationMode(tsModule, serviceHost, vueDocuments, vueInfoService);
   }
   getId() {
-    return 'vue2-html';
+    return 'vue-html';
   }
   configure(c: any) {
     this.htmlMode.configure(c);
