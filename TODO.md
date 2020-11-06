@@ -1,0 +1,3 @@
+- registerLanguageConfigurations: auto closing stuff
+- stage code mode
+  - module / stageModule support
