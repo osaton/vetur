@@ -166,7 +166,7 @@ export class LanguageModes {
       services.infoService
     );
 
-    const jsMode = await getJavascriptMode(
+    const jsMode = await await getJavascriptMode(
       this.serviceHost,
       this.documentRegions,
       workspacePath,

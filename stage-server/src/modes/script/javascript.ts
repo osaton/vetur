@@ -214,8 +214,8 @@ export async function getJavascriptMode(
       const completions = service.getCompletionsAtPosition(fileFsPath, offset, {
         ...getUserPreferences(scriptDoc),
         triggerCharacter: getTsTriggerCharacter(triggerChar),
-        includeCompletionsWithInsertText: true,
-        includeCompletionsForModuleExports: config.vetur.completion.autoImport
+        includeCompletionsWithInsertText: true
+        //includeCompletionsForModuleExports: config.vetur.completion.autoImport
       });
       if (!completions) {
         return { isIncomplete: false, items: [] };
@@ -810,7 +810,8 @@ function getSourceDoc(fileName: string, program: ts.Program): TextDocument {
 }
 
 export function languageServiceIncludesFile(ls: ts.LanguageService, documentUri: string): boolean {
-  const filePaths = ls.getProgram()!.getRootFileNames();
+  const program = ls.getProgram();
+  const filePaths = program!.getRootFileNames();
   const filePath = getFilePath(documentUri);
   return filePaths.includes(filePath);
 }
