@@ -32,11 +32,11 @@ export class StageHTMLMode extends HTMLMode {
   ) {
     const vueDocuments = getLanguageModelCache<HTMLDocument>(10, 60, document => parseHTMLDocument(document));
     const vueVersion = inferVueVersion(tsModule, workspacePath);
-    super(documentRegions, workspacePath, vueVersion, vueDocuments, 'stage-html', vueInfoService);
+    super(documentRegions, workspacePath, vueVersion, vueDocuments, 'html', vueInfoService);
   }
 
   getId() {
-    return 'stage-html';
+    return 'html';
   }
 }
 

@@ -20,7 +20,7 @@ const EMPTY_ELEMENTS: string[] = [
 ];
 
 export function registerLanguageConfigurations() {
-  languages.setLanguageConfiguration('stage-html', {
+  languages.setLanguageConfiguration('html', {
     wordPattern: /(-?\d*\.\d\w*)|([^\`\~\!\@\$\^\&\*\(\)\=\+\[\{\]\}\\\|\;\:\'\"\,\.\<\>\/\s]+)/g,
     onEnterRules: [
       {
@@ -39,7 +39,7 @@ export function registerLanguageConfigurations() {
     wordPattern: /(-?\d*\.\d\w*)|([^\`\~\!\@\$\^\&\*\(\)\=\+\[\{\]\}\\\|\;\:\'\"\,\.\<\>\/\s]+)/g,
     onEnterRules: [
       {
-        beforeText: /<%[=+]?\s+$/,
+        beforeText: /<%[=+]?\s*$/,
         afterText: /^%>/,
         action: { indentAction: IndentAction.IndentOutdent }
       }

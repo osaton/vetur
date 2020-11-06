@@ -167,7 +167,7 @@ function parseRegions(text: string, part: EmbeddedPart) {
   let lastAttributeName = '';
   let languageIdFromType: LanguageId | '' = '';
   const importedScripts: string[] = [];
-  const contentLanguage = part.languageId;
+  const contentLanguage = part.languageId === 'stage-html' ? 'html' : part.languageId;
   let token = scanner.scan();
 
   while (token !== TokenType.EOS) {
