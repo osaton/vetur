@@ -34,6 +34,15 @@ function getLangId(block: string, lang: string) {
   return lang || mapping[block];
 }
 
+function getRegionLangId(block: string, lang: string) {
+  const mapping: { [block: string]: string } = {
+    template: 'html', // 'stage-html'?
+    script: 'javascript',
+    style: 'css'
+  };
+  return lang || mapping[block];
+}
+
 function testcase(description: string) {
   interface Contents {
     [block: string]: string | undefined;
@@ -105,7 +114,7 @@ function testcase(description: string) {
           for (const block of blocks) {
             const content = contents[block];
             if (content && content.indexOf('|') >= 0) {
-              assert.equal(language, getLangId(block, langMap[block]));
+              assert.equal(language, getRegionLangId(block, langMap[block]));
               return;
             }
           }
