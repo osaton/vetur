@@ -2,7 +2,7 @@ import { EmbeddedRegion } from '../../../embeddedSupport/documentRegionParser';
 
 // `<% ... %>`
 const blockRegex = /<%([^%>]*)%>/s;
-const blockTypes: Record<string, any> = {
+const blockInfo: Record<string, any> = {
   // `<% `
   ' ': {
     type: 'code',
@@ -32,9 +32,24 @@ const blockTypes: Record<string, any> = {
 export class StageCodeScanner {
   private source: string;
   private position: number;
+  private definingChars: string[];
+  private allowedBlockDefiningChars = /\s/;
+
   constructor(src: string) {
     this.source = src;
     this.position = 0;
+    this.definingChars = Object.keys(blockInfo);
+  }
+
+  getBlockTypeId(definingChar: string) {
+    if (this.definingChars.includes(definingChar)) {
+      return definingChar;
+      // \n \r etc
+    } else if (this.allowedBlockDefiningChars.test(definingChar)) {
+      return ' ';
+    }
+
+    return null;
   }
 
   findNext() {
@@ -45,11 +60,19 @@ export class StageCodeScanner {
       return null;
     }
 
+    const content = match[1];
+
+    const typeId = this.getBlockTypeId(content.charAt(0));
+
+    // Malformed start tag. E.g. `<%2`
+    if (!typeId) {
+      return null;
+    }
+
+    const info = blockInfo[typeId];
+
     const startPosition = this.position + match.index!;
     this.position = startPosition + match[0].length;
-
-    const content = match[1];
-    const info = blockTypes[content.charAt(0)];
 
     const res: EmbeddedRegion = {
       languageId: 'stage-code',
