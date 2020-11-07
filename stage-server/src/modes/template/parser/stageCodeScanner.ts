@@ -2,6 +2,7 @@ import { EmbeddedRegion } from '../../../embeddedSupport/documentRegionParser';
 
 // `<% ... %>`
 const blockRegex = /<%([^%>]*)%>/s;
+const allowedCodeBlockDefiningChars = /\s/;
 const blockInfo: Record<string, any> = {
   // `<% `
   ' ': {
@@ -28,7 +29,24 @@ const blockInfo: Record<string, any> = {
     end: 2
   }
 };
+const definingChars = Object.keys(blockInfo);
 
+export function getStageBlockTypeId(definingChar: string) {
+  if (definingChars.includes(definingChar)) {
+    return definingChar;
+    // \n \r etc
+  } else if (allowedCodeBlockDefiningChars.test(definingChar)) {
+    return ' ';
+  }
+
+  return null;
+}
+
+export function getStageBlockInfo(definingChar: string) {
+  const id = getStageBlockTypeId(definingChar);
+
+  return (id && blockInfo[id]) || null;
+}
 export class StageCodeScanner {
   private source: string;
   private position: number;
@@ -41,17 +59,6 @@ export class StageCodeScanner {
     this.definingChars = Object.keys(blockInfo);
   }
 
-  getBlockTypeId(definingChar: string) {
-    if (this.definingChars.includes(definingChar)) {
-      return definingChar;
-      // \n \r etc
-    } else if (this.allowedBlockDefiningChars.test(definingChar)) {
-      return ' ';
-    }
-
-    return null;
-  }
-
   findNext() {
     const str = this.source.substr(this.position);
     const match = str.match(blockRegex);
@@ -62,7 +69,7 @@ export class StageCodeScanner {
 
     const content = match[1];
 
-    const typeId = this.getBlockTypeId(content.charAt(0));
+    const typeId = getStageBlockTypeId(content.charAt(0));
 
     // Malformed start tag. E.g. `<%2`
     if (!typeId) {
