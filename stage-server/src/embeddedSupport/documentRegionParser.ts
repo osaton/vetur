@@ -2,7 +2,7 @@ import { partial } from 'lodash';
 import { tokenToString } from 'typescript';
 import { TextDocument } from 'vscode-languageserver-types';
 import { createScanner, TokenType, Scanner } from '../modes/template/parser/htmlScanner';
-import { StageCodeScanner } from '../modes/template/parser/stageCodeScanner';
+import { StageBlockType, StageCodeScanner } from '../modes/template/parser/stageCodeScanner';
 import { removeQuotes } from '../utils/strings';
 import { getSinglePartDocument, LanguageId } from './embeddedSupport';
 
@@ -15,6 +15,7 @@ export interface EmbeddedRegion {
   type: RegionType;
   contentStart?: number;
   contentEnd?: number;
+  stageBlockType?: StageBlockType;
 }
 export interface EmbeddedPart {
   languageId: LanguageId;

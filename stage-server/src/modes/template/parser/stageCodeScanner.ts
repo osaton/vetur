@@ -1,9 +1,18 @@
 import { EmbeddedRegion } from '../../../embeddedSupport/documentRegionParser';
 
+export type StageBlockType = 'code' | 'output' | 'output-safe' | 'localisation';
+export type StageBlockTypeId = ' ' | '+' | '=' | '@';
+
+export interface StageBlock {
+  type: StageBlockType;
+  start: number;
+  end: number;
+}
+export type StageBlocks = { [k in StageBlockTypeId]: StageBlock };
 // `<% ... %>`
 const blockRegex = /<%([^%>]*)%>/s;
 const allowedCodeBlockDefiningChars = /\s/;
-const blockInfo: Record<string, any> = {
+const stageBlocks: StageBlocks = {
   // `<% `
   ' ': {
     type: 'code',
@@ -29,11 +38,11 @@ const blockInfo: Record<string, any> = {
     end: 2
   }
 };
-const definingChars = Object.keys(blockInfo);
+const definingChars: StageBlockTypeId[] = [' ', '+', '=', '@'];
 
-export function getStageBlockTypeId(definingChar: string) {
-  if (definingChars.includes(definingChar)) {
-    return definingChar;
+export function getStageBlockTypeId(definingChar: string): StageBlockTypeId | null {
+  if (definingChars.includes(definingChar as StageBlockTypeId)) {
+    return definingChar as StageBlockTypeId;
     // \n \r etc
   } else if (allowedCodeBlockDefiningChars.test(definingChar)) {
     return ' ';
@@ -45,7 +54,8 @@ export function getStageBlockTypeId(definingChar: string) {
 export function getStageBlockInfo(definingChar: string) {
   const id = getStageBlockTypeId(definingChar);
 
-  return (id && blockInfo[id]) || null;
+  // Return code block as default
+  return (id && stageBlocks[id]) || stageBlocks[' '];
 }
 export class StageCodeScanner {
   private source: string;
@@ -56,7 +66,6 @@ export class StageCodeScanner {
   constructor(src: string) {
     this.source = src;
     this.position = 0;
-    this.definingChars = Object.keys(blockInfo);
   }
 
   findNext() {
@@ -76,7 +85,7 @@ export class StageCodeScanner {
       return null;
     }
 
-    const info = blockInfo[typeId];
+    const info = stageBlocks[typeId];
 
     const startPosition = this.position + match.index!;
     this.position = startPosition + match[0].length;
@@ -84,7 +93,8 @@ export class StageCodeScanner {
     const res: EmbeddedRegion = {
       languageId: 'stage-code',
       start: startPosition,
-      type: info.type,
+      type: 'script',
+      stageBlockType: info.type,
       contentStart: startPosition + info.start,
       contentEnd: startPosition + match[0].length - info.end,
       end: startPosition + match[0].length

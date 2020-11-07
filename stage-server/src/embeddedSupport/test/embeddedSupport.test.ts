@@ -26,7 +26,7 @@ suite('New Embedded Support', () => {
 `;
   const srcStageCode = `<template><div>
 <% 'test'; %></div>
-<script> const tota = 'joo'; <% 'tota' %></script>
+<script> const test = 'joo'; <% 'tst2' %></script>
 <%+ 'test2'; %>
 </template>`;
 
@@ -109,6 +109,18 @@ text<% 'test' %>
       '<style>             </style>\n' +
       '<script type="             ">                </script>\n' +
       '<style data-param="              ">           </style>';
+
+    assert.equal(doc.getText().length, newDoc.getText().length);
+    assert.equal(newDoc.getText().trim(), htmlSrc);
+  });
+
+  test('Get Single part `stage-code` Document', () => {
+    const doc = TextDocument.create('test://test.stage', 'stage', 0, srcStageCode);
+    const { parts } = parseDocumentParts(doc);
+    const newDoc = getSingleLanguageDocument(doc, parts[0].regions, 'stage-code');
+    const htmlSrc = `'test';         
+                                'tst2'            
+    'test2'; ;`;
 
     assert.equal(doc.getText().length, newDoc.getText().length);
     assert.equal(newDoc.getText().trim(), htmlSrc);

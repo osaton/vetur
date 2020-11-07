@@ -203,11 +203,43 @@ export function getSinglePartLanguageDocument(document: TextDocument, part: Embe
   return TextDocument.create(document.uri, languageId, document.version, newContent);
 }
 
+function getStageCodeDocument(document: TextDocument, regions: EmbeddedRegion[]) {
+  const oldContent = document.getText();
+  let newContent = oldContent
+    .split('\n')
+    .map(line => ' '.repeat(line.length))
+    .join('\n');
+
+  function getCodePart(r: EmbeddedRegion) {
+    //const startContent =
+    let endingContent = ' '.repeat(r.end - r.contentEnd!);
+
+    // Add semicolon to the end of all printing type blocks so that we don't break javascript intellisense
+    // E.g. `<%+ 'test' %>` becomes `    'test';  `
+    if (r.stageBlockType !== 'code') {
+      endingContent = ';' + endingContent.slice(0, 1);
+    }
+    return ' '.repeat(r.contentStart! - r.start) + oldContent.slice(r.contentStart, r.contentEnd) + endingContent;
+  }
+
+  for (const r of regions) {
+    if (r.languageId === 'stage-code') {
+      newContent = newContent.slice(0, r.start) + getCodePart(r) + newContent.slice(r.end);
+    }
+  }
+
+  return TextDocument.create(document.uri, 'stage-code', document.version, newContent);
+}
+
 export function getSingleLanguageDocument(
   document: TextDocument,
   regions: EmbeddedRegion[],
   languageId: LanguageId
 ): TextDocument {
+  if (languageId === 'stage-code') {
+    return getStageCodeDocument(document, regions);
+  }
+
   const oldContent = document.getText();
   let newContent = oldContent
     .split('\n')
