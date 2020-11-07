@@ -83,6 +83,7 @@ export interface DocumentRegions {
   getLanguageAtPosition(position: Position): LanguageId;
 
   getPartAtPosition(position: Position): EmbeddedPart | null;
+  getAllRegions(): EmbeddedRegion[];
   getImportedScripts(): string[];
 }
 
@@ -134,7 +135,8 @@ export function getStageDocumentRegions(document: TextDocument): DocumentRegions
       }
       return part;
     },
-    getImportedScripts: () => []
+    getImportedScripts: () => [],
+    getAllRegions: () => getAllRegions(parts)
   };
 }
 
