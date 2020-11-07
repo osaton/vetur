@@ -1,13 +1,18 @@
 import { TokenType, createScanner } from './htmlScanner';
 import { isVoidElement } from '../tagProviders/htmlTags';
 import { TextDocument } from 'vscode-languageserver-types';
+import { getStageBlockInfo } from './stageCodeScanner';
 
 export class Node {
   public tag?: string;
   public closed?: boolean;
   public endTagStart?: number;
   public isInterpolation: boolean;
+  public isStageCode: boolean;
+  public stageContentStart: number;
+  public stageContentEnd: number;
   public attributes?: { [name: string]: string };
+
   public get attributeNames(): string[] {
     if (this.attributes) {
       return Object.keys(this.attributes);
@@ -17,6 +22,7 @@ export class Node {
   }
   constructor(public start: number, public end: number, public children: Node[], public parent: Node) {
     this.isInterpolation = false;
+    this.isStageCode = false;
   }
   public isSameTag(tagInLowerCase: string) {
     return (
@@ -131,6 +137,24 @@ export function parse(text: string): HTMLDocument {
         break;
       }
       case TokenType.EndInterpolation:
+        curr.end = scanner.getTokenEnd();
+        curr.closed = true;
+        curr = curr.parent;
+        break;
+      case TokenType.StartStageCode: {
+        const child = new Node(scanner.getTokenOffset(), text.length, [], curr);
+        child.isStageCode = true;
+        curr.children.push(child);
+        curr = child;
+        break;
+      }
+      case TokenType.StageCodeContent:
+        const txt = scanner.getTokenText();
+        const data = getStageBlockInfo(txt.charAt(0));
+        curr.stageContentStart = curr.start + data.start;
+        curr.stageContentEnd = curr.end - data.end;
+        break;
+      case TokenType.EndStageCode:
         curr.end = scanner.getTokenEnd();
         curr.closed = true;
         curr = curr.parent;

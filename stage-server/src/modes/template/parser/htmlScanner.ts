@@ -31,9 +31,9 @@ export enum TokenType {
   Styles,
   EOS,
   // Stage specific
-  StartStageBlock,
-  EndStageBlock,
-  Stage
+  StartStageCode,
+  EndStageCode,
+  StageCodeContent
 }
 
 class MultiLineStream {
@@ -195,7 +195,7 @@ export enum ScannerState {
   WithinStyleContent,
   AfterAttributeName,
   BeforeAttributeValue,
-  WithinStageContent
+  WithinStageCodeContent
 }
 
 export interface Scanner {
@@ -287,8 +287,8 @@ export function createScanner(
           // <
           if (stream.advanceIfChar(_PRC)) {
             // %
-            state = ScannerState.WithinStageContent;
-            return finishToken(offset, TokenType.StartStageBlock);
+            state = ScannerState.WithinStageCodeContent;
+            return finishToken(offset, TokenType.StartStageCode);
           }
           if (!stream.eos() && stream.peekChar() === _BNG) {
             // !
@@ -323,6 +323,13 @@ export function createScanner(
         }
         stream.advanceUntilChars([_RCR, _RCR]);
         return finishToken(offset, TokenType.InterpolationContent);
+      case ScannerState.WithinStageCodeContent:
+        if (stream.advanceIfChars([_PRC, _RAN])) {
+          state = ScannerState.WithinContent;
+          return finishToken(offset, TokenType.EndStageCode);
+        }
+        stream.advanceUntilChars([_PRC, _RAN]);
+        return finishToken(offset, TokenType.StageCodeContent);
       case ScannerState.AfterOpeningEndTag:
         const tagName = nextElementName();
         if (tagName.length > 0) {
@@ -486,13 +493,6 @@ export function createScanner(
         state = ScannerState.WithinContent;
         if (offset < stream.pos()) {
           return finishToken(offset, TokenType.Styles);
-        }
-        return internalScan(); // no advance yet - jump to content
-      case ScannerState.WithinStageContent:
-        stream.advanceUntilRegExp(/%>/i);
-        state = ScannerState.WithinContent;
-        if (offset < stream.pos()) {
-          return finishToken(offset, TokenType.Stage);
         }
         return internalScan(); // no advance yet - jump to content
     }

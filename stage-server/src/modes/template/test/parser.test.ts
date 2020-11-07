@@ -20,6 +20,16 @@ suite('HTML Parser', () => {
     if (node.isInterpolation) {
       ret.isInterpolation = true;
     }
+    if (node.isStageCode) {
+      ret.isStageCode = true;
+    }
+    if (node.stageContentStart) {
+      ret.stageContentStart = node.stageContentStart;
+    }
+    if (node.stageContentEnd) {
+      ret.stageContentEnd = node.stageContentEnd;
+    }
+
     return ret;
   }
 
@@ -160,6 +170,32 @@ suite('HTML Parser', () => {
     ]);
   });
 
+  test('Stage blocks', () => {
+    assertDocument(`<div> test2 </div>`, [
+      {
+        children: [],
+        closed: true,
+        end: 18,
+        endTagStart: 12,
+        start: 0,
+        tag: 'div'
+      }
+    ]);
+
+    assertDocument(`<%+ test2 %>`, [
+      {
+        tag: undefined,
+        start: 0,
+        end: 12,
+        closed: true,
+        isStageCode: true,
+        stageContentStart: 3,
+        stageContentEnd: 10,
+        endTagStart: undefined,
+        children: []
+      }
+    ]);
+  });
   test('Interpolation', () => {
     assertDocument('{{test}}', [
       {
@@ -179,15 +215,17 @@ suite('HTML Parser', () => {
         end: 19,
         closed: true,
         endTagStart: 13,
-        children: [{
-          tag: undefined,
-          start: 5,
-          end: 13,
-          closed: true,
-          endTagStart: undefined,
-          isInterpolation: true,
-          children: [],
-        }]
+        children: [
+          {
+            tag: undefined,
+            start: 5,
+            end: 13,
+            closed: true,
+            endTagStart: undefined,
+            isInterpolation: true,
+            children: []
+          }
+        ]
       }
     ]);
     assertDocument('<div>{{test}}', [
@@ -197,15 +235,17 @@ suite('HTML Parser', () => {
         end: 13,
         closed: false,
         endTagStart: undefined,
-        children: [{
-          tag: undefined,
-          start: 5,
-          end: 13,
-          closed: true,
-          endTagStart: undefined,
-          isInterpolation: true,
-          children: [],
-        }]
+        children: [
+          {
+            tag: undefined,
+            start: 5,
+            end: 13,
+            closed: true,
+            endTagStart: undefined,
+            isInterpolation: true,
+            children: []
+          }
+        ]
       }
     ]);
   });

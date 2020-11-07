@@ -170,8 +170,39 @@ function parseRegions(text: string, part: EmbeddedPart) {
   const contentLanguage = part.languageId === 'stage-html' ? 'html' : part.languageId;
   let token = scanner.scan();
 
+  const stageBlock: EmbeddedRegion | null = null;
   while (token !== TokenType.EOS) {
     switch (token) {
+      // Maybe someday, but for now use normal parts merging as it takes care of cases
+      // where stage blocks are inside any possible position (script, style etc)
+      /*case TokenType.StartStageCode:
+        stageBlock = {
+          languageId: 'stage-code',
+          start: scanner.getTokenOffset(),
+          end: 0,
+          type: 'script'
+        };
+        break;
+      case TokenType.EndStageCode:
+        if (!stageBlock) {
+          // Shouldn't happen ever
+          break;
+        }
+        const text2 = scanner.getTokenText();
+        stageBlock.end = scanner.getTokenEnd();
+        regions.push(stageBlock);
+        stageBlock = null;
+        break;
+      case TokenType.StageCodeContent:
+        if (!stageBlock) {
+          // Shouldn't happen ever
+          break;
+        }
+        const text = scanner.getTokenText();
+        stageBlock.contentStart = scanner.getTokenOffset();
+        stageBlock.contentEnd = scanner.getTokenEnd();
+        break;
+      */
       case TokenType.Styles:
         regions.push({
           languageId: /^(sass|scss|less|postcss|stylus)$/.test(languageIdFromType)
