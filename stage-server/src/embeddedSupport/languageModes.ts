@@ -90,6 +90,7 @@ export interface LanguageModeRange extends LanguageRange {
 export class LanguageModes {
   private modes: { [k in LanguageId]: LanguageMode } = {
     stage: nullMode,
+    // We use vanilla html but need to use custom language, so we can register custom onEnterRules for indentation
     'stage-html': nullMode,
     'stage-javascript': nullMode,
     html: nullMode,
@@ -190,7 +191,7 @@ export class LanguageModes {
 
     this.modes['vue'] = getVueMode(workspacePath, globalSnippetDir);
     //this.modes['stage-html'] = stageHtmlMode;
-    this.modes['html'] = stageHtmlMode;
+    this.modes['stage-html'] = stageHtmlMode;
     this.modes['pug'] = getPugMode(workspacePath);
     this.modes['css'] = getCSSMode(workspacePath, this.documentRegions);
     this.modes['postcss'] = getPostCSSMode(workspacePath, this.documentRegions);
