@@ -10,7 +10,10 @@ export interface StageBlock {
 }
 export type StageBlocks = { [k in StageBlockTypeId]: StageBlock };
 // `<% ... %>`
-const blockRegex = /<%([^%>]*)%>/s;
+//const blockRegex = /<%([^(%>)]*)%>/s;
+const blockRegex = /(<%|%>)/g;
+const openRegex = /<%/;
+const closeRegex = /%>/;
 const allowedCodeBlockDefiningChars = /\s/;
 const stageBlocks: StageBlocks = {
   // `<% `
@@ -69,16 +72,14 @@ export class StageCodeScanner {
   }
 
   findNext() {
-    const str = this.source.substr(this.position);
-    const match = str.match(blockRegex);
+    let str = this.source.substr(this.position);
+    const openMatch = str.match(openRegex);
 
-    if (!match) {
+    if (!openMatch) {
       return null;
     }
 
-    const content = match[1];
-
-    const typeId = getStageBlockTypeId(content.charAt(0));
+    const typeId = getStageBlockTypeId(str.charAt(openMatch.index! + openMatch[0].length));
 
     // Malformed start tag. E.g. `<%2`
     if (!typeId) {
@@ -87,18 +88,27 @@ export class StageCodeScanner {
 
     const info = stageBlocks[typeId];
 
-    const startPosition = this.position + match.index!;
-    this.position = startPosition + match[0].length;
+    const startPosition = this.position + openMatch.index!;
+    str = this.source.substr(startPosition);
+
+    // Find end position
+    const closeMatch = str.match(closeRegex);
+
+    if (!closeMatch) {
+      return null;
+    }
 
     const res: EmbeddedRegion = {
-      languageId: 'stage-code',
+      languageId: 'stage-javascript',
       start: startPosition,
-      type: 'script',
+      type: 'stage-block',
       stageBlockType: info.type,
       contentStart: startPosition + info.start,
-      contentEnd: startPosition + match[0].length - info.end,
-      end: startPosition + match[0].length
+      contentEnd: startPosition + closeMatch.index!,
+      end: startPosition + closeMatch.index! + info.end
     };
+
+    this.position = res.end;
 
     return res;
   }
