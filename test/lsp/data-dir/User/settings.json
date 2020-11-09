@@ -1,4 +1,5 @@
 {
   "update.mode": "none",
-  "vetur.useWorkspaceDependencies": true
+  "vetur.useWorkspaceDependencies": true,
+  "vetur.completion.tagCasing": "initial"
 }
