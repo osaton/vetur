@@ -3,7 +3,7 @@ import { parseDocumentParts, EmbeddedRegion, EmbeddedPart } from './documentRegi
 
 export type LanguageId =
   | 'stage'
-  | 'stage-code'
+  | 'stage-javascript'
   | 'stage-html'
   | 'html'
   | 'vue'
@@ -87,7 +87,7 @@ export interface DocumentRegions {
   getImportedScripts(): string[];
 }
 
-type RegionType = 'template' | 'script' | 'style' | 'custom';
+type RegionType = 'template' | 'script' | 'style' | 'custom' | 'stage-block';
 
 const defaultLanguageIdForBlockTypes: { [type: string]: string } = {
   template: 'stage-html',
@@ -203,7 +203,7 @@ export function getSinglePartLanguageDocument(document: TextDocument, part: Embe
   return TextDocument.create(document.uri, languageId, document.version, newContent);
 }
 
-function getStageCodeDocument(document: TextDocument, regions: EmbeddedRegion[]) {
+function getStageBlockDocument(document: TextDocument, regions: EmbeddedRegion[], languageId: LanguageId) {
   const oldContent = document.getText();
   let newContent = oldContent
     .split('\n')
@@ -223,12 +223,12 @@ function getStageCodeDocument(document: TextDocument, regions: EmbeddedRegion[])
   }
 
   for (const r of regions) {
-    if (r.languageId === 'stage-code') {
+    if (r.languageId === languageId) {
       newContent = newContent.slice(0, r.start) + getCodePart(r) + newContent.slice(r.end);
     }
   }
 
-  return TextDocument.create(document.uri, 'stage-code', document.version, newContent);
+  return TextDocument.create(document.uri, languageId, document.version, newContent);
 }
 
 export function getSingleLanguageDocument(
@@ -236,8 +236,8 @@ export function getSingleLanguageDocument(
   regions: EmbeddedRegion[],
   languageId: LanguageId
 ): TextDocument {
-  if (languageId === 'stage-code') {
-    return getStageCodeDocument(document, regions);
+  if (languageId === 'stage-javascript') {
+    return getStageBlockDocument(document, regions, languageId);
   }
 
   const oldContent = document.getText();
@@ -276,6 +276,11 @@ export function getSingleTypeDocument(
   regions: EmbeddedRegion[],
   type: RegionType
 ): TextDocument {
+  // We don't want to include block tags for type documents
+  if (type === 'stage-block') {
+    return getStageBlockDocument(document, regions, 'stage-javascript');
+  }
+
   const oldContent = document.getText();
   let newContent = oldContent
     .split('\n')

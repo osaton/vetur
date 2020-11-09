@@ -58,6 +58,7 @@ export async function getJavascriptMode(
   serviceHost: IServiceHost,
   documentRegions: LanguageModelCache<DocumentRegions>,
   workspacePath: string | undefined,
+  stageMode: Boolean,
   vueInfoService?: VueInfoService,
   dependencyService?: DependencyService
 ): Promise<LanguageMode> {
@@ -68,13 +69,15 @@ export async function getJavascriptMode(
   }
 
   const jsDocuments = getLanguageModelCache(10, 60, (document, position) => {
-    const vueDocument = documentRegions.refreshAndGet(document);
-    return vueDocument.getSingleTypeDocument('script');
+    if (stageMode) {
+      return documentRegions.refreshAndGet(document).getSingleTypeDocument('stage-block');
+    }
+    return documentRegions.refreshAndGet(document).getSingleTypeDocument('script');
   });
 
   const firstScriptRegion = getLanguageModelCache(10, 60, document => {
-    const vueDocument = documentRegions.refreshAndGet(document);
-    const scriptRegions = vueDocument.getLanguageRangesOfType('script');
+    const doc = documentRegions.refreshAndGet(document);
+    const scriptRegions = doc.getLanguageRangesOfType('stage-block');
     return scriptRegions.length > 0 ? scriptRegions[0] : undefined;
   });
 
@@ -86,12 +89,21 @@ export async function getJavascriptMode(
     }
   }
 
-  const { updateCurrentStageTextDocument } = serviceHost;
+  const { updateCurrentStageTextDocument: updateCurrentDocument } = serviceHost;
   let config: any = {};
   let supportedCodeFixCodes: Set<number>;
 
+  function updateCurrentStageTextDocument(doc: TextDocument) {
+    return updateCurrentDocument(doc, stageMode);
+  }
+
   function getUserPreferences(scriptDoc: TextDocument): ts.UserPreferences {
-    const baseConfig = config[scriptDoc.languageId === 'javascript' ? 'javascript' : 'typescript'];
+    const baseConfig =
+      config[
+        scriptDoc.languageId === 'stage-javascript' || scriptDoc.languageId === 'javascript'
+          ? 'javascript'
+          : 'typescript'
+      ];
     const preferencesConfig = baseConfig?.preferences;
 
     if (!baseConfig || !preferencesConfig) {
@@ -221,53 +233,55 @@ export async function getJavascriptMode(
         return { isIncomplete: false, items: [] };
       }
       const entries = completions.entries.filter(entry => entry.name !== '__vueEditorBridge');
+      const items = entries.map((entry, index) => {
+        const range = entry.replacementSpan && convertRange(scriptDoc, entry.replacementSpan);
+        const { label, detail } = calculateLabelAndDetailTextForPathImport(entry);
+
+        const item: CompletionItem = {
+          uri: doc.uri,
+          position,
+          preselect: entry.isRecommended ? true : undefined,
+          label,
+          detail,
+          filterText: getFilterText(entry.insertText),
+          sortText: entry.sortText + index,
+          kind: toCompletionItemKind(entry.kind),
+          textEdit: range && TextEdit.replace(range, entry.insertText || entry.name),
+          insertText: entry.insertText,
+          data: {
+            // data used for resolving item details (see 'doResolve')
+            languageId: scriptDoc.languageId,
+            uri: doc.uri,
+            offset,
+            source: entry.source
+          }
+        } as CompletionItem;
+
+        if (entry.kindModifiers) {
+          const kindModifiers = parseKindModifier(entry.kindModifiers ?? '');
+          if (kindModifiers.optional) {
+            if (!item.insertText) {
+              item.insertText = item.label;
+            }
+            if (!item.filterText) {
+              item.filterText = item.label;
+            }
+            item.label += '?';
+          }
+          if (kindModifiers.deprecated) {
+            item.tags = [CompletionItemTag.Deprecated];
+          }
+          if (kindModifiers.color) {
+            item.kind = CompletionItemKind.Color;
+          }
+        }
+
+        return item;
+      });
+
       return {
         isIncomplete: false,
-        items: entries.map((entry, index) => {
-          const range = entry.replacementSpan && convertRange(scriptDoc, entry.replacementSpan);
-          const { label, detail } = calculateLabelAndDetailTextForPathImport(entry);
-
-          const item: CompletionItem = {
-            uri: doc.uri,
-            position,
-            preselect: entry.isRecommended ? true : undefined,
-            label,
-            detail,
-            filterText: getFilterText(entry.insertText),
-            sortText: entry.sortText + index,
-            kind: toCompletionItemKind(entry.kind),
-            textEdit: range && TextEdit.replace(range, entry.insertText || entry.name),
-            insertText: entry.insertText,
-            data: {
-              // data used for resolving item details (see 'doResolve')
-              languageId: scriptDoc.languageId,
-              uri: doc.uri,
-              offset,
-              source: entry.source
-            }
-          } as CompletionItem;
-
-          if (entry.kindModifiers) {
-            const kindModifiers = parseKindModifier(entry.kindModifiers ?? '');
-            if (kindModifiers.optional) {
-              if (!item.insertText) {
-                item.insertText = item.label;
-              }
-              if (!item.filterText) {
-                item.filterText = item.label;
-              }
-              item.label += '?';
-            }
-            if (kindModifiers.deprecated) {
-              item.tags = [CompletionItemTag.Deprecated];
-            }
-            if (kindModifiers.color) {
-              item.kind = CompletionItemKind.Color;
-            }
-          }
-
-          return item;
-        })
+        items
       };
 
       function calculateLabelAndDetailTextForPathImport(entry: ts.CompletionEntry) {

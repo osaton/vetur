@@ -6,7 +6,7 @@ import { StageBlockType, StageCodeScanner } from '../modes/template/parser/stage
 import { removeQuotes } from '../utils/strings';
 import { getSinglePartDocument, LanguageId } from './embeddedSupport';
 
-export type RegionType = 'template' | 'script' | 'style' | 'content';
+export type RegionType = 'template' | 'script' | 'style' | 'content' | 'stage-block';
 
 export interface EmbeddedRegion {
   languageId: LanguageId;
@@ -151,7 +151,6 @@ function parsePartStageCodeRegions(text: string, part: EmbeddedPart) {
   const scanner = new StageCodeScanner(text);
 
   const regions = scanner.findAll();
-
   return {
     regions
   };

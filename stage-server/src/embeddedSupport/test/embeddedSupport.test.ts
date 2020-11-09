@@ -60,7 +60,16 @@ text<% 'test' %>
   test('Stage code region', () => {
     let doc = TextDocument.create('test://test.stage', 'stage', 0, srcStageCode);
     let { parts } = parseDocumentParts(doc);
-    let langs = ['html', 'stage-code', 'html', 'javascript', 'stage-code', 'html', 'stage-code', 'html'];
+    let langs = [
+      'html',
+      'stage-javascript',
+      'html',
+      'javascript',
+      'stage-javascript',
+      'html',
+      'stage-javascript',
+      'html'
+    ];
 
     let regionLangs = parts[0].regions.map(region => region.languageId);
     assert.equal(JSON.stringify(regionLangs), JSON.stringify(langs));
@@ -70,23 +79,23 @@ text<% 'test' %>
     parts = res.parts;
     langs = [
       'html',
-      'stage-code',
+      'stage-javascript',
       'html',
-      'stage-code',
+      'stage-javascript',
       'html',
-      'stage-code',
+      'stage-javascript',
       'html',
-      'stage-code',
+      'stage-javascript',
       'html',
-      'stage-code',
+      'stage-javascript',
       'html',
-      'stage-code',
+      'stage-javascript',
       'html',
-      'stage-code',
+      'stage-javascript',
       'html',
       'javascript',
       'html',
-      'stage-code',
+      'stage-javascript',
       'html',
       'css',
       'html'
@@ -114,13 +123,35 @@ text<% 'test' %>
     assert.equal(newDoc.getText().trim(), htmlSrc);
   });
 
-  test('Get Single part `stage-code` Document', () => {
+  test('Get Single part `stage-block` Document', () => {
     const doc = TextDocument.create('test://test.stage', 'stage', 0, srcStageCode);
     const { parts } = parseDocumentParts(doc);
-    const newDoc = getSingleLanguageDocument(doc, parts[0].regions, 'stage-code');
+    const newDoc = getSingleTypeDocument(doc, parts[0].regions, 'stage-block');
     const htmlSrc = `'test';         
                                 'tst2'            
     'test2'; ;`;
+
+    assert.equal(doc.getText().length, newDoc.getText().length);
+    assert.equal(newDoc.getText().trim(), htmlSrc);
+  });
+
+  test('Get Single part `stage-block` Document', () => {
+    const doc = TextDocument.create('test://test.stage', 'stage', 0, srcStageCode);
+    const { parts } = parseDocumentParts(doc);
+    const newDoc = getSingleTypeDocument(doc, parts[0].regions, 'stage-block');
+    const htmlSrc = `'test';         
+                                'tst2'            
+    'test2'; ;`;
+
+    assert.equal(doc.getText().length, newDoc.getText().length);
+    assert.equal(newDoc.getText().trim(), htmlSrc);
+  });
+
+  test('Get Single part `javascript` Document', () => {
+    const doc = TextDocument.create('test://test.stage', 'stage', 0, srcStageCode);
+    const { parts } = parseDocumentParts(doc);
+    const newDoc = getSingleTypeDocument(doc, parts[0].regions, 'script');
+    const htmlSrc = `const test = 'joo';`;
 
     assert.equal(doc.getText().length, newDoc.getText().length);
     assert.equal(newDoc.getText().trim(), htmlSrc);

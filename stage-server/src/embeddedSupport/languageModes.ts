@@ -91,7 +91,7 @@ export class LanguageModes {
   private modes: { [k in LanguageId]: LanguageMode } = {
     stage: nullMode,
     'stage-html': nullMode,
-    'stage-code': nullMode,
+    'stage-javascript': nullMode,
     html: nullMode,
     vue: nullMode,
     pug: nullMode,
@@ -137,18 +137,22 @@ export class LanguageModes {
     /**
      * Documents where everything outside `<script>` is replaced with whitespace
      */
-    const scriptRegionDocumentsOld = getLanguageModelCache(10, 60, document => {
-      const doc = this.documentRegions.refreshAndGet(document);
-      return doc.getSingleTypeDocument('script');
-    });
-
     const scriptRegionDocuments = getLanguageModelCache(10, 60, document => {
       const doc = this.documentRegions.refreshAndGet(document);
       const typeDoc = doc.getSingleTypeDocument('script');
       return typeDoc;
     });
 
-    this.serviceHost = getServiceHost(tsModule, workspacePath, scriptRegionDocuments);
+    /**
+     * Documents where everything outside `<% %>` is replaced with whitespace
+     */
+    const stageBlockDocuments = getLanguageModelCache(10, 60, document => {
+      const doc = this.documentRegions.refreshAndGet(document);
+      const typeDoc = doc.getSingleTypeDocument('stage-block');
+      return typeDoc;
+    });
+
+    this.serviceHost = getServiceHost(tsModule, workspacePath, scriptRegionDocuments, stageBlockDocuments);
 
     const vueHtmlMode = new StageHTMLMode(
       tsModule,
@@ -166,16 +170,26 @@ export class LanguageModes {
       services.infoService
     );
 
-    const jsMode = await await getJavascriptMode(
+    const jsMode = await getJavascriptMode(
       this.serviceHost,
       this.documentRegions,
       workspacePath,
+      false,
+      services.infoService,
+      services.dependencyService
+    );
+
+    const stageJsMode = await getJavascriptMode(
+      this.serviceHost,
+      this.documentRegions,
+      workspacePath,
+      true,
       services.infoService,
       services.dependencyService
     );
 
     this.modes['vue'] = getVueMode(workspacePath, globalSnippetDir);
-    this.modes['stage-html'] = stageHtmlMode;
+    //this.modes['stage-html'] = stageHtmlMode;
     this.modes['html'] = stageHtmlMode;
     this.modes['pug'] = getPugMode(workspacePath);
     this.modes['css'] = getCSSMode(workspacePath, this.documentRegions);
@@ -185,6 +199,7 @@ export class LanguageModes {
     this.modes['less'] = getLESSMode(workspacePath, this.documentRegions);
     this.modes['stylus'] = getStylusMode(this.documentRegions);
     this.modes['javascript'] = jsMode;
+    this.modes['stage-javascript'] = stageJsMode;
     this.modes['typescript'] = jsMode;
     this.modes['tsx'] = jsMode;
   }

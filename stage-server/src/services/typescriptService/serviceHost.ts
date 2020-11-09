@@ -17,6 +17,7 @@ import { ModuleResolutionCache } from './moduleResolutionCache';
 import { globalScope } from './transformTemplate';
 import { inferVueVersion, VueVersion } from './vueVersion';
 import { ChildComponent } from '../vueInfoService';
+import { LanguageId } from '../../embeddedSupport/embeddedSupport';
 
 const NEWLINE = process.platform === 'win32' ? '\r\n' : '\n';
 
@@ -40,7 +41,7 @@ function getDefaultCompilerOptions(tsModule: T_TypeScript) {
   const defaultCompilerOptions: ts.CompilerOptions = {
     allowNonTsExtensions: true,
     allowJs: true,
-    lib: ['lib.dom.d.ts', 'lib.es2017.d.ts'],
+    lib: ['lib.es2017.d.ts'],
     target: tsModule.ScriptTarget.Latest,
     moduleResolution: tsModule.ModuleResolutionKind.NodeJs,
     module: tsModule.ModuleKind.CommonJS,
@@ -64,7 +65,8 @@ export interface IServiceHost {
     templateSourceMap: TemplateSourceMap;
   };
   updateCurrentStageTextDocument(
-    doc: TextDocument
+    doc: TextDocument,
+    stageMode: Boolean
   ): {
     service: ts.LanguageService;
     scriptDoc: TextDocument;
@@ -84,15 +86,18 @@ export interface IServiceHost {
 export function getServiceHost(
   tsModule: T_TypeScript,
   workspacePath: string,
-  updatedScriptRegionDocuments: LanguageModelCache<TextDocument>
+  updatedScriptRegionDocuments: LanguageModelCache<TextDocument>,
+  updatedStageBlockDocuments: LanguageModelCache<TextDocument>
 ): IServiceHost {
   patchTS(tsModule);
 
   let currentScriptDoc: TextDocument;
+  let currentStageDoc: TextDocument;
 
   let projectVersion = 1;
   const versions = new Map<string, number>();
   const localScriptRegionDocuments = new Map<string, TextDocument>();
+  const localStageBlockDocuments = new Map<string, TextDocument>();
   const nodeModuleSnapshots = new Map<string, ts.IScriptSnapshot>();
   const projectFileSnapshots = new Map<string, ts.IScriptSnapshot>();
   const moduleResolutionCache = new ModuleResolutionCache();
@@ -145,14 +150,14 @@ export function getServiceHost(
     const fileFsPath = getFileFsPath(doc.uri);
     const filePath = getFilePath(doc.uri);
     // When file is not in language service, add it
-    if (!localScriptRegionDocuments.has(fileFsPath)) {
+    if (!localStageBlockDocuments.has(fileFsPath)) {
       if (fileFsPath.endsWith('.vue') || fileFsPath.endsWith('.vue.template')) {
         scriptFileNameSet.add(filePath);
       }
     }
 
     if (isVirtualVueTemplateFile(fileFsPath)) {
-      localScriptRegionDocuments.set(fileFsPath, doc);
+      localStageBlockDocuments.set(fileFsPath, doc);
       scriptFileNameSet.add(filePath);
       if (childComponents) {
         allChildComponentsInfo.set(filePath, childComponents);
@@ -167,47 +172,70 @@ export function getServiceHost(
     };
   }
 
-  function updateCurrentStageTextDocument(doc: TextDocument) {
-    const fileFsPath = getFileFsPath(doc.uri);
-    const filePath = getFilePath(doc.uri);
-    // When file is not in language service, add it
-    if (!localScriptRegionDocuments.has(fileFsPath)) {
-      if (fileFsPath.endsWith('.stage')) {
-        scriptFileNameSet.add(filePath);
-      }
-    }
-
-    if (!currentScriptDoc || doc.uri !== currentScriptDoc.uri || doc.version !== currentScriptDoc.version) {
+  function updateScriptDoc(doc: TextDocument, fileFsPath: string, filePath: string) {
+    if (
+      //stageMode &&
+      !currentScriptDoc ||
+      doc.uri !== currentScriptDoc.uri ||
+      doc.version !== currentScriptDoc.version
+    ) {
+      //currentScriptDoc = updatedScriptRegionDocuments.refreshAndGet(doc)!;
       currentScriptDoc = updatedScriptRegionDocuments.refreshAndGet(doc)!;
       const localLastDoc = localScriptRegionDocuments.get(fileFsPath);
-      if (localLastDoc && currentScriptDoc.languageId !== localLastDoc.languageId) {
+      if (localLastDoc && currentScriptDoc.languageId !== currentScriptDoc.languageId) {
         // if languageId changed, restart the language service; it can't handle file type changes
-        jsLanguageService.dispose();
-        jsLanguageService = tsModule.createLanguageService(jsHost);
+        jsDomLanguageService.dispose();
+        jsDomLanguageService = tsModule.createLanguageService(jsHost);
       }
       localScriptRegionDocuments.set(fileFsPath, currentScriptDoc);
       scriptFileNameSet.add(filePath);
       versions.set(fileFsPath, (versions.get(fileFsPath) || 0) + 1);
       projectVersion++;
     }
+  }
 
-    // Just checking
-    // jsLanguageService.dispose();
-    // jsLanguageService = tsModule.createLanguageService(jsHost);
-    // const program = jsLanguageService.getProgram();
+  function updateStageDoc(doc: TextDocument, fileFsPath: string, filePath: string) {
+    if (
+      //stageMode &&
+      !currentStageDoc ||
+      doc.uri !== currentStageDoc.uri ||
+      doc.version !== currentStageDoc.version
+    ) {
+      //currentScriptDoc = updatedScriptRegionDocuments.refreshAndGet(doc)!;
+      currentStageDoc = updatedStageBlockDocuments.refreshAndGet(doc)!;
+      const localLastDoc = localStageBlockDocuments.get(fileFsPath);
+      if (localLastDoc && currentStageDoc.languageId !== localLastDoc.languageId) {
+        // if languageId changed, restart the language service; it can't handle file type changes
+        jsLanguageService.dispose();
+        jsLanguageService = tsModule.createLanguageService(jsHost);
+      }
+      localStageBlockDocuments.set(fileFsPath, currentStageDoc);
+      scriptFileNameSet.add(filePath);
+      versions.set(fileFsPath, (versions.get(fileFsPath) || 0) + 1);
+      projectVersion++;
+    }
+  }
 
-    if (currentScriptDoc.languageId === 'javascript') {
-      //domJsHost.addFile(currentScriptDoc);
-      const program = jsDomLanguageService.getProgram();
-      console.log('yeah');
-      const sourceFiles = program!.getSourceFiles();
-      const sourceFile = program!.getSourceFile(fileFsPath);
-      console.log('tota');
+  function updateCurrentStageTextDocument(doc: TextDocument, stageMode: Boolean) {
+    const fileFsPath = getFileFsPath(doc.uri);
+    const filePath = getFilePath(doc.uri);
+
+    // When file is not in language service, add it
+    if (!scriptFileNameSet.has(filePath)) {
+      if (fileFsPath.endsWith('.stage')) {
+        scriptFileNameSet.add(filePath);
+      }
+    }
+
+    if (stageMode) {
+      updateStageDoc(doc, fileFsPath, filePath);
+    } else {
+      updateScriptDoc(doc, fileFsPath, filePath);
     }
 
     return {
-      service: jsDomLanguageService,
-      scriptDoc: currentScriptDoc
+      service: stageMode ? jsLanguageService : jsDomLanguageService,
+      scriptDoc: stageMode ? currentStageDoc : currentScriptDoc
     };
   }
 
@@ -265,12 +293,12 @@ export function getServiceHost(
         if (isStageFile(fileName)) {
           const uri = URI.file(fileName);
           const fileFsPath = normalizeFileNameToFsPath(fileName);
-          let doc = localScriptRegionDocuments.get(fileFsPath);
+          let doc = localStageBlockDocuments.get(fileFsPath);
           if (!doc) {
             doc = updatedScriptRegionDocuments.refreshAndGet(
               TextDocument.create(uri.toString(), 'stage', 0, tsModule.sys.readFile(fileName) || '')
             );
-            localScriptRegionDocuments.set(fileFsPath, doc);
+            localStageBlockDocuments.set(fileFsPath, doc);
             scriptFileNameSet.add(fileName);
           }
           const kind = getScriptKind(tsModule, doc.languageId);
@@ -338,13 +366,13 @@ export function getServiceHost(
             const resolvedFileName = tsResolvedModule.resolvedFileName.slice(0, -'.ts'.length);
             const uri = URI.file(resolvedFileName);
             const resolvedFileFsPath = normalizeFileNameToFsPath(resolvedFileName);
-            let doc = localScriptRegionDocuments.get(resolvedFileFsPath);
+            let doc = localStageBlockDocuments.get(resolvedFileFsPath);
             // Vue file not created yet
             if (!doc) {
-              doc = updatedScriptRegionDocuments.refreshAndGet(
-                TextDocument.create(uri.toString(), 'vue', 0, tsModule.sys.readFile(resolvedFileName) || '')
+              doc = updatedStageBlockDocuments.refreshAndGet(
+                TextDocument.create(uri.toString(), 'stage', 0, tsModule.sys.readFile(resolvedFileName) || '')
               );
-              localScriptRegionDocuments.set(resolvedFileFsPath, doc);
+              localStageBlockDocuments.set(resolvedFileFsPath, doc);
               scriptFileNameSet.add(resolvedFileName);
             }
 
@@ -400,7 +428,7 @@ export function getServiceHost(
 
         // .vue.template files are handled in pre-process phase
         if (isVirtualVueTemplateFile(fileFsPath)) {
-          const doc = localScriptRegionDocuments.get(fileFsPath);
+          const doc = localStageBlockDocuments.get(fileFsPath);
           const fileText = doc ? doc.getText() : '';
           return {
             getText: (start, end) => fileText.substring(start, end),
@@ -425,7 +453,7 @@ export function getServiceHost(
         }
 
         // stage files in workspace
-        const doc = localScriptRegionDocuments.get(fileFsPath);
+        const doc = localStageBlockDocuments.get(fileFsPath);
         let fileText = '';
         if (doc) {
           fileText = doc.getText();
@@ -458,7 +486,7 @@ export function getServiceHost(
       getSourceFile = (fileName: string, languageVersion: ts.ScriptTarget, onError?: (message: string) => void) => {
         const sourceText = ts.sys.readFile(fileName);
         return sourceText !== undefined ? ts.createSourceFile(fileName, sourceText, languageVersion) : undefined;
-      }
+      };
       getCurrentDirectory = () => workspacePath;
       getDefaultLibFileName = tsModule.getDefaultLibFilePath;
       getNewLine = () => NEWLINE;
@@ -473,8 +501,8 @@ export function getServiceHost(
         include?: ReadonlyArray<string>,
         depth?: number
       ): string[] {
-        const allExtensions = extensions ? extensions.concat(['.vue']) : extensions;
-        return vueSys.readDirectory(path, allExtensions, exclude, include, depth);
+        //const allExtensions = extensions ? extensions.concat(['.vue']) : extensions;
+        return vueSys.readDirectory(path, extensions, exclude, include, depth);
       }
       getScriptFileNames() {
         const fileNames = Array.from(scriptFileNameSet);
@@ -494,34 +522,18 @@ export function getServiceHost(
         return version ? version.toString() : '0';
       }
       getScriptKind(fileName: string) {
+        // For type libraries in this mode
         if (fileName.includes('node_modules')) {
           return (tsModule as any).getScriptKindFromFileName(fileName);
         }
-
         if (isStageFile(fileName)) {
-          const uri = URI.file(fileName);
-          const fileFsPath = normalizeFileNameToFsPath(fileName);
-          let doc = localScriptRegionDocuments.get(fileFsPath);
-          if (!doc) {
-            doc = updatedScriptRegionDocuments.refreshAndGet(
-              TextDocument.create(uri.toString(), 'stage', 0, tsModule.sys.readFile(fileName) || '')
-            );
-            localScriptRegionDocuments.set(fileFsPath, doc);
-            scriptFileNameSet.add(fileName);
-          }
-          const kind = getScriptKind(tsModule, doc.languageId);
-          return kind;
-        } else if (isVirtualVueTemplateFile(fileName)) {
-          return tsModule.ScriptKind.JS;
-        } else {
-          if (fileName === bridge.fileName) {
-            return tsModule.ScriptKind.TS;
-          }
-          // NOTE: Typescript 2.3 should export getScriptKindFromFileName. Then this cast should be removed.
-          return (tsModule as any).getScriptKindFromFileName(fileName);
+          return getScriptKind(tsModule, 'javascript');
         }
+        // NOTE: Typescript 2.3 should export getScriptKindFromFileName. Then this cast should be removed.
+        return (tsModule as any).getScriptKindFromFileName(fileName);
       }
       getScriptSnapshot(fileName: string) {
+        // For type libraries in this mode
         if (fileName.includes('node_modules')) {
           if (nodeModuleSnapshots.has(fileName)) {
             return nodeModuleSnapshots.get(fileName);
@@ -536,48 +548,7 @@ export function getServiceHost(
           return snapshot;
         }
 
-        if (fileName === bridge.fileName) {
-          const text =
-            vueVersion === VueVersion.VPre25
-              ? bridge.preVue25Content
-              : vueVersion === VueVersion.V25
-              ? bridge.vue25Content
-              : bridge.vue30Content;
-
-          return {
-            getText: (start: number, end: number) => text.substring(start, end),
-            getLength: () => text.length,
-            getChangeRange: () => void 0
-          };
-        }
-
         const fileFsPath = normalizeFileNameToFsPath(fileName);
-
-        // .vue.template files are handled in pre-process phase
-        if (isVirtualVueTemplateFile(fileFsPath)) {
-          const doc = localScriptRegionDocuments.get(fileFsPath);
-          const fileText = doc ? doc.getText() : '';
-          return {
-            getText: (start: number, end: number) => fileText.substring(start, end),
-            getLength: () => fileText.length,
-            getChangeRange: () => void 0
-          };
-        }
-
-        // js/ts files in workspace
-        if (!isStageFile(fileFsPath)) {
-          if (projectFileSnapshots.has(fileFsPath)) {
-            return projectFileSnapshots.get(fileFsPath);
-          }
-          const fileText = tsModule.sys.readFile(fileFsPath) || '';
-          const snapshot: ts.IScriptSnapshot = {
-            getText: (start, end) => fileText.substring(start, end),
-            getLength: () => fileText.length,
-            getChangeRange: () => void 0
-          };
-          projectFileSnapshots.set(fileFsPath, snapshot);
-          return snapshot;
-        }
 
         // stage files in workspace
         const doc = localScriptRegionDocuments.get(fileFsPath);
@@ -597,30 +568,6 @@ export function getServiceHost(
           getChangeRange: () => void 0
         };
       }
-
-      /*addFile(doc: TextDocument) {
-        const filePath = getFilePath(doc.uri);
-        const text = doc.getText();
-        const snap = ts.ScriptSnapshot.fromString(text);
-        snap.getChangeRange = () => undefined;
-        const existing = this.files[filePath];
-        if (existing) {
-          this.files[filePath].file = snap;
-        } else {
-          this.files[filePath] = { ver: 1, file: snap };
-        }
-
-        const newSourceFile = tsModule.createSourceFile(
-          filePath,
-          text,
-          ts.ScriptTarget.Latest,
-          true ,
-          tsModule.ScriptKind.JS
-        );
-
-        const testing = newSourceFile.getText();
-        const tota = 'noin';
-      }*/
     }
 
     return new ServiceHost();
@@ -637,6 +584,7 @@ export function getServiceHost(
 
   const domJsHost = createDomScriptServiceHost({
     ...compilerOptions,
+    lib: ['lib.dom.d.ts', 'lib.es2017.d.ts'],
     module: ts.ModuleKind.None
   });
 
@@ -652,7 +600,7 @@ export function getServiceHost(
 
   const registry = tsModule.createDocumentRegistry(true);
   let jsLanguageService = tsModule.createLanguageService(jsHost, registry);
-  const jsDomLanguageService = tsModule.createLanguageService(domJsHost, registry);
+  let jsDomLanguageService = tsModule.createLanguageService(domJsHost, tsModule.createDocumentRegistry(true));
   const templateLanguageService = patchTemplateService(tsModule.createLanguageService(templateHost, registry));
 
   return {
