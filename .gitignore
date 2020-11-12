@@ -9,6 +9,11 @@ test/**/data-dir/**
 test/**/data-dir/User/**
 !test/**/data-dir/User/settings.json
 
+stage-test/**/data-dir/**
+!stage-test/**/data-dir/User
+stage-test/**/data-dir/User/**
+!stage-test/**/data-dir/User/settings.json
+
 dist
 server/dist
 docs/.vuepress/dist

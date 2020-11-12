@@ -38,14 +38,14 @@
       "runtimeExecutable": "${execPath}",
       "args": [
         "--extensionDevelopmentPath=${workspaceFolder}",
-        "--extensionTestsPath=${workspaceFolder}/dist/test/lsp",
-        "--user-data-dir=${workspaceFolder}/test/lsp/data-dir",
+        "--extensionTestsPath=${workspaceFolder}/dist/stage-test/lsp",
+        "--user-data-dir=${workspaceFolder}/stage-test/lsp/data-dir",
         "--disable-extensions",
-        "${workspaceFolder}/test/lsp/fixture"
+        "${workspaceFolder}/stage-test/lsp/fixture"
       ],
       "stopOnEntry": false,
       "sourceMaps": true,
-      "outFiles": ["${workspaceFolder}/dist/test/**/*.js"],
+      "outFiles": ["${workspaceFolder}/dist/stage-test/**/*.js"],
       "smartStep": true,
       "skipFiles": ["<node_internals>/**"]
     },
@@ -56,14 +56,14 @@
       "runtimeExecutable": "${execPath}",
       "args": [
         "--extensionDevelopmentPath=${workspaceFolder}",
-        "--extensionTestsPath=${workspaceFolder}/dist/test/interpolation",
-        "--user-data-dir=${workspaceFolder}/test/interpolation/data-dir",
+        "--extensionTestsPath=${workspaceFolder}/dist/stage-test/interpolation",
+        "--user-data-dir=${workspaceFolder}/stage-test/interpolation/data-dir",
         "--disable-extensions",
-        "${workspaceFolder}/test/interpolation/fixture"
+        "${workspaceFolder}/stage-test/interpolation/fixture"
       ],
       "stopOnEntry": false,
       "sourceMaps": true,
-      "outFiles": ["${workspaceFolder}/dist/test/**/*.js"],
+      "outFiles": ["${workspaceFolder}/dist/stage-test/**/*.js"],
       "smartStep": true,
       "skipFiles": ["<node_internals>/**"]
     },
@@ -74,14 +74,14 @@
       "runtimeExecutable": "${execPath}",
       "args": [
         "--extensionDevelopmentPath=${workspaceFolder}",
-        "--extensionTestsPath=${workspaceFolder}/dist/test/grammar",
-        "--user-data-dir=${workspaceFolder}/test/grammar/data-dir",
+        "--extensionTestsPath=${workspaceFolder}/dist/stage-test/grammar",
+        "--user-data-dir=${workspaceFolder}/stage-test/grammar/data-dir",
         "--disable-extensions",
-        "${workspaceFolder}/test/grammar/fixture"
+        "${workspaceFolder}/stage-test/grammar/fixture"
       ],
       "stopOnEntry": false,
       "sourceMaps": true,
-      "outFiles": ["${workspaceFolder}/dist/test/**/*.js"],
+      "outFiles": ["${workspaceFolder}/dist/stage-test/**/*.js"],
       "smartStep": true,
       "skipFiles": ["<node_internals>/**"]
     },
@@ -92,10 +92,10 @@
       "runtimeExecutable": "${execPath}",
       "args": [
         "--extensionDevelopmentPath=${workspaceFolder}",
-        "--extensionTestsPath=${workspaceFolder}/dist/test/vue3",
-        "--user-data-dir=${workspaceFolder}/test/vue3/data-dir",
+        "--extensionTestsPath=${workspaceFolder}/dist/stage-test/vue3",
+        "--user-data-dir=${workspaceFolder}/stage-test/vue3/data-dir",
         "--disable-extensions",
-        "${workspaceFolder}/test/vue3/fixture"
+        "${workspaceFolder}/stage-test/vue3/fixture"
       ],
       "stopOnEntry": false,
       "sourceMaps": true,
@@ -110,14 +110,14 @@
       "runtimeExecutable": "${execPath}",
       "args": [
         "--extensionDevelopmentPath=${workspaceFolder}",
-        "--extensionTestsPath=${workspaceFolder}/dist/test/componentData",
-        "--user-data-dir=${workspaceFolder}/test/componentData/data-dir",
+        "--extensionTestsPath=${workspaceFolder}/dist/stage-test/componentData",
+        "--user-data-dir=${workspaceFolder}/stage-test/componentData/data-dir",
         "--disable-extensions",
-        "${workspaceFolder}/test/componentData/fixture"
+        "${workspaceFolder}/stage-test/componentData/fixture"
       ],
       "stopOnEntry": false,
       "sourceMaps": true,
-      "outFiles": ["${workspaceFolder}/dist/test/**/*.js"],
+      "outFiles": ["${workspaceFolder}/dist/stage-test/**/*.js"],
       "smartStep": true,
       "skipFiles": ["<node_internals>/**"]
     },
@@ -125,12 +125,12 @@
       "type": "node",
       "request": "launch",
       "name": "Unit Test (LSP)",
-      "program": "${workspaceFolder}/server/node_modules/mocha/bin/_mocha",
-      "args": ["${workspaceFolder}/server/test"],
-      "cwd": "${workspaceFolder}/server",
+      "program": "${workspaceFolder}/stage-server/node_modules/mocha/bin/_mocha",
+      "args": ["${workspaceFolder}/stage-server/test"],
+      "cwd": "${workspaceFolder}/stage-server",
       "internalConsoleOptions": "openOnSessionStart",
       "sourceMaps": true,
-      "outFiles": ["${workspaceFolder}/server/dist/**/*.js"]
+      "outFiles": ["${workspaceFolder}/stage-server/dist/**/*.js"]
     }
   ]
 }

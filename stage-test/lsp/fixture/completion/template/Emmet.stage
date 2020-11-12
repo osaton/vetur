@@ -1,0 +1,12 @@
+<template>
+  <div style="p">
+    <% 'foo' %>
+    p
+  </div>
+  ab
+  <style>
+    .foo {
+      p
+    }
+  </style>
+</template>
