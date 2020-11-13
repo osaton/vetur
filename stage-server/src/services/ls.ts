@@ -210,7 +210,7 @@ export class LS {
       this.lspConnection.sendDiagnostics({ uri: e.document.uri, diagnostics: [] });
     });
     this.lspConnection.onDidChangeWatchedFiles(({ changes }) => {
-      const jsMode = this.languageModes.getMode('javascript');
+      const jsMode = this.languageModes.getMode('stage-javascript');
       if (!jsMode) {
         throw Error(`Can't find JS mode.`);
       }
@@ -555,7 +555,8 @@ export class LS {
   async doValidate(doc: TextDocument, cancellationToken?: VCancellationToken) {
     const diagnostics: Diagnostic[] = [];
     if (doc.languageId === 'stage') {
-      for (const lmr of this.languageModes.getAllLanguageModeRangesInDocument(doc)) {
+      const modes = this.languageModes.getAllLanguageModeRangesInDocument(doc);
+      for (const lmr of modes) {
         if (lmr.mode.doValidation) {
           if (this.validation[lmr.mode.getId()]) {
             pushAll(diagnostics, await lmr.mode.doValidation(doc, cancellationToken));

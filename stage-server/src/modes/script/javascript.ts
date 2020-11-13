@@ -206,7 +206,7 @@ export async function getJavascriptMode(
           message: tsModule.flattenDiagnosticMessageText(diag.messageText, '\n'),
           tags,
           code: diag.code,
-          source: 'Vetur'
+          source: 'Stage'
         };
       });
     },
@@ -629,7 +629,8 @@ export async function getJavascriptMode(
       collectQuickFixCommands(fixes, service, result);
 
       const textRange = { pos: start, end };
-      const refactorings = service.getApplicableRefactors(fileName, textRange, getUserPreferences(scriptDoc));
+      const settings = getUserPreferences(scriptDoc);
+      const refactorings = service.getApplicableRefactors(fileName, textRange, settings);
       collectRefactoringCommands(refactorings, fileName, formatSettings, textRange, result);
 
       return result;

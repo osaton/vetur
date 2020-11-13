@@ -126,7 +126,7 @@ export function getStageDocumentRegions(document: TextDocument): DocumentRegions
     },*/
     getLanguageRangesOfType: (type: RegionType) => getLanguageRangesOfType(document, parts, type),
 
-    getAllLanguageRanges: () => getAllLanguageRanges(document, parts),
+    getAllLanguageRanges: () => getAllLanguageRanges(document, getAllRegions(parts)),
     getLanguageAtPosition: (position: Position) => getLanguageAtPosition(document, parts, position),
     getPartAtPosition: (position: Position) => {
       const part = getPartAtPosition(document, parts, position);

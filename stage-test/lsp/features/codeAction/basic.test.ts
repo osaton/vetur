@@ -7,21 +7,19 @@ import { getDocUri } from '../../path';
 import { getDiagnosticsAndTimeout } from '../../../diagnosticHelper';
 
 describe('Should do codeAction 2', function () {
-  // todo: tests
-  return;
   // Retry for flakey tests
   this.retries(3);
-
-  const docUri = getDocUri('codeAction/Basic.vue');
+  return;
+  const docUri = getDocUri('codeAction/basic.stage');
 
   it('finds codeAction for unused import', async () => {
     const codeActions: CodeAction[] = [{ title: `Remove unused declaration for: 'lodash'` }];
-    await testCodeAction(docUri, sameLineRange(5, 6, 6), codeActions);
+    await testCodeAction(docUri, sameLineRange(2, 8, 8), codeActions);
   });
 
   it('finds codeAction for unused variables', async () => {
     const codeActions: CodeAction[] = [{ title: `Remove unused declaration for: 'foo'` }];
-    await testCodeAction(docUri, sameLineRange(7, 6, 6), codeActions);
+    await testCodeAction(docUri, sameLineRange(3, 8, 8), codeActions);
   });
 });
 

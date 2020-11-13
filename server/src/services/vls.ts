@@ -72,7 +72,8 @@ export class VLS {
   private cancellationTokenValidationRequests: { [uri: string]: VCancellationTokenSource } = {};
   private validationDelayMs = 200;
   private validation: { [k: string]: boolean } = {
-    'vue-html': true,
+    'stage-html': true,
+    'stage-javascript': true,
     html: true,
     css: true,
     scss: true,
@@ -188,7 +189,7 @@ export class VLS {
   }
 
   private async setupDynamicFormatters(settings: VLSFullConfig) {
-   if (settings.vetur.format.enable) {
+    if (settings.vetur.format.enable) {
       if (!this.documentFormatterRegistration) {
         this.documentFormatterRegistration = await this.lspConnection.client.register(DocumentFormattingRequest.type, {
           documentSelector: ['stage']
@@ -232,12 +233,13 @@ export class VLS {
     this.config = config;
 
     const veturValidationOptions = config.vetur.validation;
-    this.validation['vue-html'] = veturValidationOptions.template;
+    this.validation['stage-html'] = veturValidationOptions.template;
     this.validation.css = veturValidationOptions.style;
     this.validation.postcss = veturValidationOptions.style;
     this.validation.scss = veturValidationOptions.style;
     this.validation.less = veturValidationOptions.style;
     this.validation.javascript = veturValidationOptions.script;
+    this.validation['stage-javascript'] = veturValidationOptions.script;
 
     this.templateInterpolationValidation = config.vetur.experimental.templateInterpolationService;
 
@@ -489,7 +491,7 @@ export class VLS {
 
     const doc = this.documentService.getDocument(textDocument.uri)!;
     const mode = this.languageModes.getModeAtPosition(doc, range.start);
-    const posMode = this.languageModes.getModeAtPosition(doc, range.end)
+    const posMode = this.languageModes.getModeAtPosition(doc, range.end);
     if (posMode !== mode) {
       return [];
     }
@@ -557,10 +559,6 @@ export class VLS {
       for (const lmr of this.languageModes.getAllLanguageModeRangesInDocument(doc)) {
         if (lmr.mode.doValidation) {
           if (this.validation[lmr.mode.getId()]) {
-            pushAll(diagnostics, await lmr.mode.doValidation(doc, cancellationToken));
-          }
-          // Special case for template type checking
-          else if (lmr.mode.getId() === 'vue-html' && this.templateInterpolationValidation) {
             pushAll(diagnostics, await lmr.mode.doValidation(doc, cancellationToken));
           }
         }

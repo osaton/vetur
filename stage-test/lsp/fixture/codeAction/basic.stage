@@ -1,0 +1,7 @@
+<template>
+  <%
+  const lodash = require('lodash')
+  const foo = 5
+  %>
+  <div></div>
+</template>
