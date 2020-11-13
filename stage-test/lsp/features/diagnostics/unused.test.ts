@@ -4,23 +4,22 @@ import { sameLineRange } from '../../../util';
 import { testDiagnostics } from '../../../diagnosticHelper';
 import { getDocUri } from '../../path';
 
-describe('Should find diagnostics for unused variables', () => {
+describe.only('Should find diagnostics for unused variables', () => {
   // todo: tests
-  return;
-  const docUri = getDocUri('diagnostics/Unused.vue');
+  const docUri = getDocUri('diagnostics/unused.stage');
 
   it('shows diagnostic errors for unused variables', async () => {
     const expectedDiagnostics: vscode.Diagnostic[] = [
       {
         severity: vscode.DiagnosticSeverity.Error,
         message: "'lodash' is declared but its value is never read.",
-        range: sameLineRange(5, 0, 33),
+        range: sameLineRange(2, 8, 14),
         tags: [DiagnosticTag.Unnecessary]
       },
       {
         severity: vscode.DiagnosticSeverity.Error,
         message: "'foo' is declared but its value is never read.",
-        range: sameLineRange(7, 6, 9),
+        range: sameLineRange(3, 8, 11),
         tags: [DiagnosticTag.Unnecessary]
       }
     ];

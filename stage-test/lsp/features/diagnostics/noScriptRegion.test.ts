@@ -1,17 +1,11 @@
 import { testNoDiagnostics } from '../../../diagnosticHelper';
 import { getDocUri } from '../../path';
 
-describe('Should find no error when <script> is not present', () => {
+describe('Should find no error when <script> or <% %> is not present', () => {
   // todo: tests
-  return;
-  const childUri = getDocUri('diagnostics/noScriptRegion/Child.vue');
-  const parentUri = getDocUri('diagnostics/noScriptRegion/Parent.vue');
+  const docUri = getDocUri('diagnostics/noScriptRegion.stage');
 
-  it('shows no diagnostics error for component without <script> region', async () => {
-    await testNoDiagnostics(childUri);
-  });
-
-  it('shows no diagnostics error when importing a component without <script> region ', async () => {
-    await testNoDiagnostics(parentUri);
+  it('shows no diagnostics error for component without <script> or <% %> region', async () => {
+    await testNoDiagnostics(docUri);
   });
 });
