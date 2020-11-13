@@ -4,7 +4,7 @@ import { sameLineRange } from '../../../util';
 import { testDiagnostics } from '../../../diagnosticHelper';
 import { getDocUri } from '../../path';
 
-describe.only('Should find diagnostics for unused variables', () => {
+describe('Should find diagnostics for unused variables', () => {
   // todo: tests
   const docUri = getDocUri('diagnostics/unused.stage');
 
