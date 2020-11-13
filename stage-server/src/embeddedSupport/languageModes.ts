@@ -31,7 +31,6 @@ import {
   LanguageRange,
   DocumentRegions
 } from './embeddedSupport';
-import { getVueMode } from '../modes/vue';
 import { getStageMode } from '../modes/stage';
 import { getCSSMode, getSCSSMode, getLESSMode, getPostCSSMode } from '../modes/style';
 import { getJavascriptMode } from '../modes/script/javascript';
@@ -190,7 +189,6 @@ export class LanguageModes {
       services.dependencyService
     );
 
-    this.modes['vue'] = getVueMode(workspacePath, globalSnippetDir);
     this.modes['stage'] = getStageMode(workspacePath, globalSnippetDir);
     this.modes['stage-html'] = stageHtmlMode;
     this.modes['pug'] = getPugMode(workspacePath);
