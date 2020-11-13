@@ -8,10 +8,6 @@
     "noImplicitAny": false,
     "lib": ["es2015"]
   },
-  "include": [
-    "**/*.ts"
-  ],
-  "exclude": [
-    "**/fixture"
-  ]
+  "include": ["**/*.ts", "lsp/features/completion/stageBlock.stage"],
+  "exclude": ["**/fixture"]
 }

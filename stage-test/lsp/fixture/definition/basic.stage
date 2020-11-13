@@ -1,0 +1,5 @@
+<template>
+  <%
+  const { bar } = require('./foo');
+  %>
+</template>

@@ -4,6 +4,15 @@ import { location, position, sameLineLocation } from '../../../util';
 import { getDocUri } from '../../path';
 
 describe('Should find definition', () => {
+  describe('Inside stage block (<% %>)', () => {
+    const stageBlockUri = getDocUri('definition/basic.stage');
+
+    it('finds definition for imported files', async () => {
+      const itemUri = getDocUri('definition/foo.js');
+      await testDefinition(stageBlockUri, position(2, 12), location(itemUri, 1, 2, 1, 5));
+    });
+  });
+
   // todo: tests
   return;
   const docUri = getDocUri('definition/Basic.vue');
