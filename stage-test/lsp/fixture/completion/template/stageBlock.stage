@@ -1,0 +1,10 @@
+<template>
+  <%
+  const test1 = 'foo';
+  %>
+  <%
+  const { ba } = require('./foo');
+  const test2 = tes
+  const test = i
+  %>
+</template>

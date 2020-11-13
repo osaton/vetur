@@ -4,17 +4,48 @@ import { testCompletion } from '../../../completionHelper';
 import { getDocUri } from '../../path';
 
 describe('Should autocomplete for <template>', () => {
+  const basicUri = getDocUri('completion/template/html.stage');
+
+  it('completes html tags', async () => {
+    await testCompletion(basicUri, position(1, 5), ['div']);
+  });
+
+  describe('Should autocomplete for <style>', () => {
+    const basicUri = getDocUri('completion/template/style.stage');
+
+    it('completes css properties for CSS', async () => {
+      await testCompletion(basicUri, position(3, 5), ['width', 'word-wrap']);
+    });
+  });
+
+  describe('Should autocomplete for <script>', () => {
+    const basicUri = getDocUri('completion/template/script.stage');
+    const multiScriptUri = getDocUri('completion/template/multipleScript.stage');
+
+    it('completes DOM specific methods', async () => {
+      await testCompletion(basicUri, position(3, 7), ['document']);
+    });
+    it('completes variables from previous script regions', async () => {
+      await testCompletion(multiScriptUri, position(6, 20), ['test1']);
+    });
+  });
+
+  describe('Should complete stage block (<% %>) sections', () => {
+    const stageBlockUri = getDocUri('completion/template/stageBlock.stage');
+    it('completes variables from other stage blocks', async () => {
+      await testCompletion(stageBlockUri, position(6, 19), ['test1']);
+    });
+
+    it('completes imported variables from `require`', async () => {
+      await testCompletion(stageBlockUri, position(5, 12), ['bar']);
+    });
+  });
+
   // todo: tests
   return;
   describe('Should complete <template> section', () => {
-    const basicUri = getDocUri('completion/template/Basic.vue');
-
     it('completes directives such as v-if', async () => {
       await testCompletion(basicUri, position(1, 8), ['v-if', 'v-cloak']);
-    });
-
-    it('completes html tags', async () => {
-      await testCompletion(basicUri, position(2, 6), ['img', 'iframe']);
     });
 
     it('completes imported components', async () => {

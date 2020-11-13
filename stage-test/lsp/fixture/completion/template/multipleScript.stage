@@ -1,0 +1,9 @@
+<template>
+  <div></div>
+  <script>
+    const test1 = 'foo';
+  </script>
+  <script>
+    const test2 = te
+  </script>
+</template>

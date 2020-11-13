@@ -3,7 +3,7 @@ import { testCompletion } from '../../../completionHelper';
 import { getDocUri } from '../../path';
 
 describe('Emmet', () => {
-  const basicUri = getDocUri('completion/template/Emmet.stage');
+  const basicUri = getDocUri('completion/template/emmet.stage');
 
   describe('Should do emmet in html region', () => {
     it('Should do emmet right after <% %>', async () => {
