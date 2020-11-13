@@ -6,10 +6,10 @@ import { CodeAction } from 'vscode-languageclient';
 import { getDocUri } from '../../path';
 import { getDiagnosticsAndTimeout } from '../../../diagnosticHelper';
 
-describe('Should do codeAction 2', function () {
+describe('Should do codeAction', function () {
   // Retry for flakey tests
   this.retries(3);
-  return;
+
   const docUri = getDocUri('codeAction/basic.stage');
 
   it('finds codeAction for unused import', async () => {
