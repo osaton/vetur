@@ -191,6 +191,16 @@
         }
       },
       {
+        "scopeName": "markdown.stage.codeblock",
+        "path": "./syntaxes/stage/markdown-stage.json",
+        "injectTo": [
+          "text.html.markdown"
+        ],
+        "embeddedLanguages": {
+          "meta.embedded.block.stage": "stage"
+        }
+      },
+      {
         "language": "vue",
         "scopeName": "source.vue",
         "path": "./syntaxes/vue-generated.json",
