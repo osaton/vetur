@@ -5,14 +5,12 @@ import { position, sameLineRange } from '../../../util';
 import { getDocUri } from '../../path';
 
 describe('Should do documentColor', () => {
-  // todo: tests
-  return;
-  const docUri = getDocUri('documentColor/Basic.vue');
+  const docUri = getDocUri('documentColor/basic.stage');
 
   it('show no duplicate document colors', async () => {
-    await testHighlight(docUri, position(2, 5), [
-      { color: { red: 1, blue: 1, green: 1, alpha: 1 }, range: sameLineRange(2, 22, 27) },
-      { color: { red: 0, blue: 0, green: 0, alpha: 1 }, range: sameLineRange(8, 11, 16) }
+    await testHighlight(docUri, position(3, 7), [
+      { color: { red: 1, blue: 1, green: 1, alpha: 1 }, range: sameLineRange(3, 24, 29) },
+      { color: { red: 0, blue: 0, green: 0, alpha: 1 }, range: sameLineRange(9, 13, 18) }
     ]);
   });
 });
