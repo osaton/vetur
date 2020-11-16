@@ -1,0 +1,11 @@
+<template>
+  <div class="counter">
+    <div class="inner-div"></div>
+    <!-- should not highlight: _ -->
+    <%
+    const _ = require('lodash');
+
+    _;
+    %>
+  </div>
+</template>

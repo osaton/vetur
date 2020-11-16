@@ -5,28 +5,19 @@ import { position, sameLineRange } from '../../../util';
 import { getDocUri } from '../../path';
 
 describe('Should do documentHighlight', () => {
-  // todo: tests
-  return;
-  const docUri = getDocUri('documentHighlight/Basic.vue');
+  const docUri = getDocUri('documentHighlight/basic.stage');
 
   it('shows highlights for <div> tags', async () => {
-    await testHighlight(docUri, position(2, 5), [
+    await testHighlight(docUri, position(2, 6), [
       { kind: vscode.DocumentHighlightKind.Read, range: sameLineRange(2, 5, 8) },
-      { kind: vscode.DocumentHighlightKind.Read, range: sameLineRange(2, 20, 23) }
+      { kind: vscode.DocumentHighlightKind.Read, range: sameLineRange(2, 29, 32) }
     ]);
   });
 
-  it('shows highlights for this.msg', async () => {
-    await testHighlight(docUri, position(23, 6), [
-      { kind: vscode.DocumentHighlightKind.Write, range: sameLineRange(23, 6, 9) },
-      { kind: vscode.DocumentHighlightKind.Text, range: sameLineRange(33, 23, 26) }
-    ]);
-  });
-
-  it('shows highlights for Item', async () => {
-    await testHighlight(docUri, position(20, 16), [
-      { kind: vscode.DocumentHighlightKind.Write, range: sameLineRange(17, 7, 11) },
-      { kind: vscode.DocumentHighlightKind.Write, range: sameLineRange(20, 16, 20) }
+  it('shows highlights for `_`', async () => {
+    await testHighlight(docUri, position(7, 4), [
+      { kind: vscode.DocumentHighlightKind.Write, range: sameLineRange(5, 10, 11) },
+      { kind: vscode.DocumentHighlightKind.Text, range: sameLineRange(7, 4, 5) }
     ]);
   });
 });
