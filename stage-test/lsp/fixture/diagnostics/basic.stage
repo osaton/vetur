@@ -1,0 +1,11 @@
+<template>
+  <div></div>
+  <%
+  const _ = require('lodash');
+  _.add(1, '5');
+
+  const not = require('./not-found');
+
+  undefinedVariable
+  %>
+</template>
