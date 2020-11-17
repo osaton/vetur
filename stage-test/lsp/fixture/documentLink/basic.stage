@@ -1,0 +1,6 @@
+<template>
+  <div class="counter-wrapper">
+    <img src="https://www.foo.com/img.jpg" width="200" height="200" />
+    <a href="./foo">Link to /foo</a>
+  </div>s
+</template>

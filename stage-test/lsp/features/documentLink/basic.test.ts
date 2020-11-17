@@ -6,14 +6,12 @@ import { getDocUri } from '../../path';
 
 describe('Should do documentLink', () => {
   // todo: tests
-  return;
-  const docUri = getDocUri('documentLink/Basic.vue');
+  const docUri = getDocUri('documentLink/basic.stage');
 
-  it('shows all documentLinks for Basic.vue', async () => {
+  it('shows all documentLinks for basic.stage', async () => {
     await testLink(docUri, [
-      { target: vscode.Uri.parse('https://vuejs.org/images/logo.png'), range: sameLineRange(2, 14, 47) },
-      { target: getDocUri('documentLink/foo'), range: sameLineRange(3, 13, 18) },
-      { target: getDocUri('documentLink/foo.js'), range: sameLineRange(7, 13, 21) }
+      { target: vscode.Uri.parse('https://www.foo.com/img.jpg'), range: sameLineRange(2, 14, 41) },
+      { target: getDocUri('documentLink/foo'), range: sameLineRange(3, 13, 18) }
     ]);
   });
 });
