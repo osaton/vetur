@@ -2,22 +2,22 @@ import { testHover } from '../../../hoverHelper';
 import { position, sameLineRange } from '../../../util';
 import { getDocUri } from '../../path';
 
-describe('Should do hover', () => {
-  // todo: tests
-  return;
-  const docUri = getDocUri('hover/Basic.vue');
+describe.only('Should do hover', () => {
+  const docUri = getDocUri('hover/basic.stage');
 
   it('shows hover for <img> tag', async () => {
-    await testHover(docUri, position(4, 7), {
+    await testHover(docUri, position(3, 8), {
       contents: ['An img element represents an image.'],
-      range: sameLineRange(4, 7, 10)
+      range: sameLineRange(3, 7, 10)
     });
   });
 
-  it('shows hover for this.msg', async () => {
-    await testHover(docUri, position(33, 23), {
-      contents: ['\n```ts\n(property) msg: string\n```\n'],
-      range: sameLineRange(33, 23, 26)
+  it('shows hover for `foo` in stage block (<% %>)', async () => {
+    const hoverText = '\n```ts\n' + 'const foo: "variable"\n' + '```';
+
+    await testHover(docUri, position(7, 8), {
+      contents: [hoverText],
+      range: sameLineRange(7, 8, 11)
     });
   });
 
@@ -30,9 +30,9 @@ Syntax: &lt;viewport\\-length&gt;\\{1,2\\}
 [MDN Reference](https://developer.mozilla.org/docs/Web/CSS/width)
 `.trim();
 
-    await testHover(docUri, position(47, 3), {
+    await testHover(docUri, position(11, 4), {
       contents: [hoverText],
-      range: sameLineRange(47, 2, 14)
+      range: sameLineRange(11, 4, 16)
     });
   });
 });
