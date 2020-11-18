@@ -5,26 +5,30 @@ import { range } from '../../../util';
 import { getDocUri } from '../../path';
 
 describe('Should do documentSymbol', () => {
-  // todo: tests
-  return;
-  const docUri = getDocUri('documentSymbol/Basic.vue');
+  const docUri = getDocUri('documentSymbol/basic.stage');
 
-  it('shows all documentSymbols for Basic.vue', async () => {
+  it('shows most documentSymbols', async () => {
     await testSymbol(docUri, [
       {
-        name: '"Basic.vue"',
-        kind: 1,
-        range: range(0, 0, 21, 0),
+        name: 'template',
+        kind: 7,
+        range: range(0, 0, 14, 11),
         children: [
           {
-            name: 'template',
+            name: 'div.counter-wrapper',
             kind: 7,
-            range: range(0, 0, 3, 11),
+            range: range(1, 2, 2, 8),
+            children: []
+          },
+          {
+            name: 'style',
+            kind: 7,
+            range: range(3, 2, 7, 10),
             children: [
               {
-                name: 'div.counter-wrapper',
-                kind: 7,
-                range: range(1, 2, 2, 8),
+                name: '.counter-wrapper > *',
+                kind: 4,
+                range: range(4, 2, 6, 3),
                 children: []
               }
             ]
@@ -32,32 +36,108 @@ describe('Should do documentSymbol', () => {
           {
             name: 'script',
             kind: 7,
-            range: range(5, 0, 13, 9),
+            range: range(8, 2, 10, 11),
             children: [
               {
-                name: 'default',
+                name: 'foo',
                 kind: 12,
-                range: range(6, 0, 12, 1),
+                range: range(9, 10, 9, 21),
                 children: []
               }
             ]
           },
           {
-            name: 'style',
-            kind: 7,
-            range: range(15, 0, 19, 8),
-            children: [
-              {
-                name: '.counter-wrapper > *',
-                kind: 4,
-                range: range(16, 0, 18, 1),
-                children: []
-              }
-            ]
+            name: 'stageFoo',
+            kind: 12,
+            range: range(12, 8, 12, 29),
+            children: []
           }
         ]
       }
     ]);
+  });
+
+  // DocumentSymbol does not work correctly at the moment but good enough for now
+  // Missing at least root node with file name and stageBlock support
+  it.skip('shows all documentSymbols correctly', () => {
+    // Should be something like
+    /*
+    await testSymbol(docUri, [
+      {
+        name: '"basic.stage"',
+        kind: 7,
+        range: range(0, 0, 21, 0),
+        children: [
+        {
+          "name": "template",
+          "kind": 7,
+          "range": [
+            {
+              "line": 0,
+              "character": 0
+            },
+            {
+              "line": 7,
+              "character": 11
+            }
+          ],
+          "children": [
+            { 
+              "name": "stage-block",
+              "kind": 7,
+              "range:" [...],
+              "children": [{
+                "name": "stageStuff",
+                "kind": 12,
+                "range": [
+                  {
+                    "line": 2,
+                    "character": 8
+                  },
+                  {
+                    "line": 2,
+                    "character": 27
+                  }
+                ],
+                "children": []
+              }]
+            },
+            {
+              "name": "script",
+              "kind": 7,
+              "range": [
+                {
+                  "line": 4,
+                  "character": 2
+                },
+                {
+                  "line": 6,
+                  "character": 11
+                }
+              ],
+              "children": [
+                {
+                  "name": "scriptStuff",
+                  "kind": 12,
+                  "range": [
+                    {
+                      "line": 5,
+                      "character": 10
+                    },
+                    {
+                      "line": 5,
+                      "character": 29
+                    }
+                  ],
+                  "children": []
+                }
+              ]
+            }
+          ]
+        }
+      ]
+      }
+    ]);*/
   });
 });
 

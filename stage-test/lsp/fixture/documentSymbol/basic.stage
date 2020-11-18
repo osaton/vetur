@@ -1,0 +1,16 @@
+<template>
+  <div class="counter-wrapper">
+  </div>
+  <style>
+  .counter-wrapper > * {
+    margin-bottom: 50px;
+  }
+  </style>
+  <script>
+    const foo = 'bar';
+  </script>
+  <%
+  const stageFoo = 'stageBar';
+  %>
+</template>
+  
