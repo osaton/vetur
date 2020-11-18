@@ -29,7 +29,7 @@ import {
   CompletionItemTag
 } from 'vscode-languageserver-types';
 import { LanguageMode } from '../../embeddedSupport/languageModes';
-import { VueDocumentRegions, LanguageRange, DocumentRegions } from '../../embeddedSupport/embeddedSupport';
+import { VueDocumentRegions, LanguageRange, DocumentRegions, LanguageId } from '../../embeddedSupport/embeddedSupport';
 import { prettierify, prettierEslintify, prettierTslintify } from '../../utils/prettier';
 import { getFileFsPath, getFilePath } from '../../utils/paths';
 
@@ -653,6 +653,13 @@ export async function getJavascriptMode(
     },
     format(doc: TextDocument, range: Range, formatParams: FormattingOptions): TextEdit[] {
       const { scriptDoc, service } = updateCurrentStageTextDocument(doc);
+
+      // This approach does not work with code blocks that could be split up at any point.
+      // E.g. `if(foo) { %>bar<% }` would be split to `if(foo) { ` and ` }` which are not valid JS blocks
+      // It would be better as a separate prettier plugin if needed
+      if (scriptDoc.languageId === 'stage-javascript') {
+        return [];
+      }
 
       const defaultFormatter =
         scriptDoc.languageId === 'javascript'

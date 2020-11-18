@@ -156,7 +156,8 @@ export class LS {
     this.lspConnection.onCompletionResolve(this.onCompletionResolve.bind(this));
 
     this.lspConnection.onDefinition(this.onDefinition.bind(this));
-    this.lspConnection.onDocumentFormatting(this.onDocumentFormatting.bind(this));
+    // Document formatting disabled for now at least
+    //this.lspConnection.onDocumentFormatting(this.onDocumentFormatting.bind(this));
     this.lspConnection.onDocumentHighlight(this.onDocumentHighlight.bind(this));
     this.lspConnection.onDocumentLinks(this.onDocumentLinks.bind(this));
     this.lspConnection.onDocumentSymbol(this.onDocumentSymbol.bind(this));
@@ -276,6 +277,9 @@ export class LS {
     const allEdits: TextEdit[] = [];
 
     const errMessages: string[] = [];
+
+    // Formatting disabled for now at least
+    return [];
 
     modeRanges.forEach(modeRange => {
       if (modeRange.mode && modeRange.mode.format) {

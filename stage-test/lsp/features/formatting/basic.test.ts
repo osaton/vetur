@@ -5,19 +5,22 @@ import { showFile, setEditorContent } from '../../../editorHelper';
 import { getDocPath, getDocUri } from '../../path';
 
 describe('Should format', () => {
-  // todo: tests
-  return;
   const fixturePath = getDocPath('formatting');
   const cases = fs
     .readdirSync(fixturePath)
-    .filter(s => !s.includes('Expected'))
-    .map(s => s.slice(0, -'.vue'.length));
+    .filter(s => !s.includes('expected'))
+    .map(s => s.slice(0, -'.stage'.length));
 
+  it.skip('should format templates', () => {
+    // This is better done as a custom plugin for prettier if there actually is need for it
+  });
+
+  /*
   for (let i = 0; i < cases.length; i++) {
-    it(`formats ${cases[i]}.vue`, async () => {
-      await testFormat(getDocUri(`formatting/${cases[i]}.vue`), getDocUri(`formatting/${cases[i]}.Expected.vue`));
+    it(`formats ${cases[i]}.stage`, async () => {
+      await testFormat(getDocUri(`formatting/${cases[i]}.stage`), getDocUri(`formatting/${cases[i]}.expected.stage`));
     });
-  }
+  }*/
 });
 
 async function testFormat(docUri: vscode.Uri, expectedDocUri: vscode.Uri) {
