@@ -417,9 +417,33 @@ export class LS {
     const doc = this.documentService.getDocument(textDocument.uri)!;
     const symbols: SymbolInformation[] = [];
 
+    function getUniqueSymbols(
+      existingSymbols: SymbolInformation[],
+      newSymbols: SymbolInformation[]
+    ): SymbolInformation[] {
+      const unique: SymbolInformation[] = [];
+
+      newSymbols.forEach(newSymbol => {
+        const existing = existingSymbols.find(
+          symbol =>
+            newSymbol.location.range.start.line === symbol.location.range.start.line &&
+            newSymbol.location.range.start.character === symbol.location.range.start.character &&
+            newSymbol.location.range.end.line === symbol.location.range.end.line &&
+            newSymbol.location.range.end.character === symbol.location.range.end.character
+        );
+
+        if (!existing) {
+          unique.push(newSymbol);
+        }
+      });
+
+      return unique;
+    }
+
     this.languageModes.getAllLanguageModeRangesInDocument(doc).forEach(m => {
       if (m.mode.findDocumentSymbols) {
-        pushAll(symbols, m.mode.findDocumentSymbols(doc));
+        const rangeSymbols = m.mode.findDocumentSymbols(doc);
+        pushAll(symbols, getUniqueSymbols(symbols, rangeSymbols));
       }
     });
     return symbols;
