@@ -2,7 +2,7 @@ import { testHover } from '../../../hoverHelper';
 import { position, sameLineRange } from '../../../util';
 import { getDocUri } from '../../path';
 
-describe.only('Should do hover', () => {
+describe('Should do hover', () => {
   const docUri = getDocUri('hover/basic.stage');
 
   it('shows hover for <img> tag', async () => {

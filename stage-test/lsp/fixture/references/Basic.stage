@@ -1,0 +1,5 @@
+<template>
+  <%
+  import * as _ from 'lodash'
+  %>
+</template>
