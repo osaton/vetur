@@ -24,9 +24,6 @@
     "variable-name": [true, "ban-keywords", "check-format", "allow-leading-underscore"]
   },
   "linterOptions": {
-    "exclude": [
-      "**/node_modules/**",
-      "**/*.d.ts"
-    ]
+    "exclude": ["**/node_modules/**", "**/*.d.ts", "./stage-server/src/types/**"]
   }
 }

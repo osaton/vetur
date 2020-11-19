@@ -17,7 +17,6 @@ import { ModuleResolutionCache } from './moduleResolutionCache';
 import { globalScope } from './transformTemplate';
 import { inferVueVersion, VueVersion } from './vueVersion';
 import { ChildComponent } from '../vueInfoService';
-import { LanguageId } from '../../embeddedSupport/embeddedSupport';
 
 const NEWLINE = process.platform === 'win32' ? '\r\n' : '\n';
 
@@ -325,7 +324,7 @@ export function getServiceHost(
         include?: ReadonlyArray<string>,
         depth?: number
       ): string[] {
-        const allExtensions = extensions ? extensions.concat(['.vue']) : extensions;
+        const allExtensions = extensions ? extensions.concat(['.stage']) : extensions;
         return vueSys.readDirectory(path, allExtensions, exclude, include, depth);
       },
       resolveModuleNames(moduleNames: string[], containingFile: string): (ts.ResolvedModule | undefined)[] {
@@ -486,7 +485,7 @@ export function getServiceHost(
       getSourceFile = (fileName: string, languageVersion: ts.ScriptTarget, onError?: (message: string) => void) => {
         const sourceText = ts.sys.readFile(fileName);
         return sourceText !== undefined ? ts.createSourceFile(fileName, sourceText, languageVersion) : undefined;
-      };
+      }
       getCurrentDirectory = () => workspacePath;
       getDefaultLibFileName = tsModule.getDefaultLibFilePath;
       getNewLine = () => NEWLINE;
@@ -588,7 +587,12 @@ export function getServiceHost(
     module: ts.ModuleKind.None
   });
 
-  const jsHost = createLanguageServiceHost(compilerOptions);
+  const typeDir = path.resolve(__dirname, '../../types');
+  const jsHost = createLanguageServiceHost({
+    ...compilerOptions,
+    // Add global Stage types
+    typeRoots: [typeDir]
+  });
 
   const templateHost = createLanguageServiceHost({
     ...compilerOptions,
