@@ -29,6 +29,13 @@ export function parseStageScript(text: string): string {
   return script.getText();
 }
 
+export function parseStageModule(text: string): string {
+  const doc = TextDocument.create('test://test/test.js', 'javascript', 0, text);
+  const regions = getStageDocumentRegions(doc);
+  const script = regions.getSingleTypeDocument('script');
+  return script.getText();
+}
+
 function parseVueScriptSrc(text: string): string | undefined {
   const doc = TextDocument.create('test://test/test.vue', 'vue', 0, text);
   const regions = getStageDocumentRegions(doc);

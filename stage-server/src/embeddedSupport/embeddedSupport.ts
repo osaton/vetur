@@ -1,4 +1,5 @@
 import { TextDocument, Position, Range } from 'vscode-languageserver-types';
+import { getFileFsPath } from '../utils/paths';
 import { parseDocumentParts, EmbeddedRegion, EmbeddedPart } from './documentRegionParser';
 
 export type LanguageId =
@@ -96,7 +97,32 @@ const defaultLanguageIdForBlockTypes: { [type: string]: string } = {
 };
 
 export function getStageDocumentRegions(document: TextDocument): DocumentRegions {
-  const { parts } = parseDocumentParts(document);
+  const fileFsPath = getFileFsPath(document.uri);
+
+  // Stage module
+  let parts: EmbeddedPart[];
+  if (fileFsPath.endsWith('.js')) {
+    const text = document.getText();
+    parts = [
+      {
+        languageId: 'stage-javascript',
+        start: 0,
+        end: text.length - 1,
+        type: 'script',
+        regions: [
+          {
+            languageId: 'stage-javascript',
+            start: 0,
+            end: text.length - 1,
+            type: 'stage-block'
+          }
+        ]
+      }
+    ];
+  } else {
+    const res = parseDocumentParts(document);
+    parts = res.parts;
+  }
 
   let activePart: EmbeddedPart = parts[0];
 

@@ -9,6 +9,11 @@ export function isStageFile(path: string) {
   return path.endsWith('.stage');
 }
 
+export function isStageModule(path: string) {
+  // todo: use specific workspace folders
+  return path.endsWith('.js');
+}
+
 /**
  * If the path ends with `.vue.ts`, it's a `.vue` file pre-processed by Vetur
  * to be used in TS Language Service

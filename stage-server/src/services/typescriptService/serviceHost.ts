@@ -5,13 +5,13 @@ import { TextDocument } from 'vscode-languageserver-types';
 import * as parseGitIgnore from 'parse-gitignore';
 
 import { LanguageModelCache } from '../../embeddedSupport/languageModelCache';
-import { createUpdater, parseStageScript } from './preprocess';
+import { createUpdater, parseStageModule, parseStageScript } from './preprocess';
 import { getFileFsPath, getFilePath, normalizeFileNameToFsPath } from '../../utils/paths';
 import * as bridge from './bridge';
 import { T_TypeScript } from '../../services/dependencyService';
 import { getVueSys } from './vueSys';
 import { TemplateSourceMap, stringifySourceMapNodes } from './sourceMap';
-import { isStageFile, isVirtualVueTemplateFile, isVueFile } from './util';
+import { isStageFile, isStageModule, isVirtualVueTemplateFile, isVueFile } from './util';
 import { logger } from '../../log';
 import { ModuleResolutionCache } from './moduleResolutionCache';
 import { globalScope } from './transformTemplate';
@@ -219,9 +219,13 @@ export function getServiceHost(
     const fileFsPath = getFileFsPath(doc.uri);
     const filePath = getFilePath(doc.uri);
 
+    if (fileFsPath.endsWith('.js')) {
+      const test = 'yes';
+    }
+
     // When file is not in language service, add it
     if (!scriptFileNameSet.has(filePath)) {
-      if (fileFsPath.endsWith('.stage')) {
+      if (fileFsPath.endsWith('.stage') || fileFsPath.endsWith('.js')) {
         scriptFileNameSet.add(filePath);
       }
     }
@@ -302,6 +306,19 @@ export function getServiceHost(
           }
           const kind = getScriptKind(tsModule, doc.languageId);
           return kind;
+        } else if (isStageModule(fileName)) {
+          const uri = URI.file(fileName);
+          const fileFsPath = normalizeFileNameToFsPath(fileName);
+          let doc = localStageBlockDocuments.get(fileFsPath);
+          if (!doc) {
+            doc = updatedScriptRegionDocuments.refreshAndGet(
+              TextDocument.create(uri.toString(), 'javascript', 0, tsModule.sys.readFile(fileName) || '')
+            );
+            localStageBlockDocuments.set(fileFsPath, doc);
+            scriptFileNameSet.add(fileName);
+          }
+          const kind = getScriptKind(tsModule, doc.languageId);
+          return kind;
         } else if (isVirtualVueTemplateFile(fileName)) {
           return tsModule.ScriptKind.JS;
         } else {
@@ -324,7 +341,7 @@ export function getServiceHost(
         include?: ReadonlyArray<string>,
         depth?: number
       ): string[] {
-        const allExtensions = extensions ? extensions.concat(['.stage']) : extensions;
+        const allExtensions = extensions ? extensions.concat(['.stage', '.js']) : extensions;
         return vueSys.readDirectory(path, allExtensions, exclude, include, depth);
       },
       resolveModuleNames(moduleNames: string[], containingFile: string): (ts.ResolvedModule | undefined)[] {
@@ -436,6 +453,25 @@ export function getServiceHost(
           };
         }
 
+        if (isStageModule(fileFsPath)) {
+          // Todo: make more efficient with Set, See `projectFileSnapshots`
+          const fileText = tsModule.sys.readFile(fileFsPath) || '';
+          /*const doc = localStageBlockDocuments.get(fileFsPath);
+          let fileText = '';
+          if (doc) {
+            fileText = doc.getText();
+          } else {
+            // JS module file that has not been loaded yet
+            fileText = tsModule.sys.readFile(fileFsPath) || '';
+          }*/
+
+          return {
+            getText: (start, end) => fileText.substring(start, end),
+            getLength: () => fileText.length,
+            getChangeRange: () => void 0
+          };
+        }
+
         // js/ts files in workspace
         if (!isStageFile(fileFsPath)) {
           if (projectFileSnapshots.has(fileFsPath)) {
@@ -485,7 +521,7 @@ export function getServiceHost(
       getSourceFile = (fileName: string, languageVersion: ts.ScriptTarget, onError?: (message: string) => void) => {
         const sourceText = ts.sys.readFile(fileName);
         return sourceText !== undefined ? ts.createSourceFile(fileName, sourceText, languageVersion) : undefined;
-      }
+      };
       getCurrentDirectory = () => workspacePath;
       getDefaultLibFileName = tsModule.getDefaultLibFilePath;
       getNewLine = () => NEWLINE;

@@ -192,7 +192,7 @@ export class LS {
     if (settings.vetur.format.enable) {
       if (!this.documentFormatterRegistration) {
         this.documentFormatterRegistration = await this.lspConnection.client.register(DocumentFormattingRequest.type, {
-          documentSelector: ['stage']
+          documentSelector: ['stage', 'js']
         });
       }
     } else {
@@ -582,7 +582,7 @@ export class LS {
 
   async doValidate(doc: TextDocument, cancellationToken?: VCancellationToken) {
     const diagnostics: Diagnostic[] = [];
-    if (doc.languageId === 'stage') {
+    if (doc.languageId === 'stage' || doc.languageId === 'javascript') {
       const modes = this.languageModes.getAllLanguageModeRangesInDocument(doc);
       for (const lmr of modes) {
         if (lmr.mode.doValidation) {
