@@ -107,13 +107,13 @@ export function getStageDocumentRegions(document: TextDocument): DocumentRegions
       {
         languageId: 'stage-javascript',
         start: 0,
-        end: text.length - 1,
+        end: text.length,
         type: 'script',
         regions: [
           {
             languageId: 'stage-javascript',
             start: 0,
-            end: text.length - 1,
+            end: text.length,
             type: 'stage-block'
           }
         ]

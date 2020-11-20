@@ -10,8 +10,8 @@ export function isStageFile(path: string) {
 }
 
 export function isStageModule(path: string) {
-  // todo: use specific workspace folders
-  return path.endsWith('.js');
+  // todo: use path from config
+  return path.includes('/modules') && path.endsWith('.js');
 }
 
 /**

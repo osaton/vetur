@@ -219,13 +219,9 @@ export function getServiceHost(
     const fileFsPath = getFileFsPath(doc.uri);
     const filePath = getFilePath(doc.uri);
 
-    if (fileFsPath.endsWith('.js')) {
-      const test = 'yes';
-    }
-
     // When file is not in language service, add it
     if (!scriptFileNameSet.has(filePath)) {
-      if (fileFsPath.endsWith('.stage') || fileFsPath.endsWith('.js')) {
+      if (isStageFile(filePath) || isStageModule(filePath)) {
         scriptFileNameSet.add(filePath);
       }
     }
@@ -453,27 +449,8 @@ export function getServiceHost(
           };
         }
 
-        if (isStageModule(fileFsPath)) {
-          // Todo: make more efficient with Set, See `projectFileSnapshots`
-          const fileText = tsModule.sys.readFile(fileFsPath) || '';
-          /*const doc = localStageBlockDocuments.get(fileFsPath);
-          let fileText = '';
-          if (doc) {
-            fileText = doc.getText();
-          } else {
-            // JS module file that has not been loaded yet
-            fileText = tsModule.sys.readFile(fileFsPath) || '';
-          }*/
-
-          return {
-            getText: (start, end) => fileText.substring(start, end),
-            getLength: () => fileText.length,
-            getChangeRange: () => void 0
-          };
-        }
-
         // js/ts files in workspace
-        if (!isStageFile(fileFsPath)) {
+        if (!isStageFile(fileFsPath) && !isStageModule(fileFsPath)) {
           if (projectFileSnapshots.has(fileFsPath)) {
             return projectFileSnapshots.get(fileFsPath);
           }
@@ -487,7 +464,7 @@ export function getServiceHost(
           return snapshot;
         }
 
-        // stage files in workspace
+        // stage files || modules in workspace
         const doc = localStageBlockDocuments.get(fileFsPath);
         let fileText = '';
         if (doc) {
@@ -495,8 +472,12 @@ export function getServiceHost(
         } else {
           // Note: This is required in addition to the parsing in embeddedSupport because
           // this works for .vue files that aren't even loaded by VS Code yet.
-          const rawVueFileText = tsModule.sys.readFile(fileFsPath) || '';
-          fileText = parseStageScript(rawVueFileText);
+          const raw = tsModule.sys.readFile(fileFsPath) || '';
+          if (isStageFile(fileFsPath)) {
+            fileText = parseStageScript(raw);
+          } else {
+            fileText = parseStageModule(raw);
+          }
         }
 
         return {

@@ -226,8 +226,8 @@ export async function getJavascriptMode(
       const completions = service.getCompletionsAtPosition(fileFsPath, offset, {
         ...getUserPreferences(scriptDoc),
         triggerCharacter: getTsTriggerCharacter(triggerChar),
-        includeCompletionsWithInsertText: true
-        //includeCompletionsForModuleExports: config.vetur.completion.autoImport
+        includeCompletionsWithInsertText: true,
+        includeCompletionsForModuleExports: false
       });
       if (!completions) {
         return { isIncomplete: false, items: [] };
@@ -343,7 +343,7 @@ export async function getJavascriptMode(
           }
         }
 
-        if (details.codeActions && config.vetur.completion.autoImport) {
+        /*if (details.codeActions && config.vetur.completion.autoImport) {
           const textEdits = convertCodeAction(doc, details.codeActions, firstScriptRegion);
           item.additionalTextEdits = textEdits;
 
@@ -352,7 +352,7 @@ export async function getJavascriptMode(
               documentation.value += '\n' + action.description;
             }
           });
-        }
+        }*/
         item.documentation = documentation;
         delete item.data;
       }
